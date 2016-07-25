@@ -1,0 +1,5 @@
+package com.cbrc.tokens.operators.enums;
+
+public enum GroupingType {
+	EXPRESSION_GROUPING, IF_EXPRESSION, SWITCH_EXPRESSION, LOOP_EXPRESSION, FUNCTION_HEADER, FUNCTION_PARAMTER;
+}

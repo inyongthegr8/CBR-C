@@ -1,0 +1,5 @@
+package com.cbrc.tokens.operators.enums;
+
+public enum BlockType {
+	FUNCTION_BLOCK, IF_BLOCK, ELSE_BLOCK, ELSE_IF_BLOCK, SWITCH_BLOCK, FOR_BLOCK, WHILE_BLOCK, DO_WHILE_BLOCK, ANONYMOUS_BLOCK;
+}
