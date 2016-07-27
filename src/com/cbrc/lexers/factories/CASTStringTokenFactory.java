@@ -19,7 +19,7 @@ public class CASTStringTokenFactory {
 			reader.mark(1);
 			int status = reader.read();
 			if(status == -1){
-				break;
+				hasTokenToReturn = true;
 			}
 			else {
 				currentChar = (char) status;
