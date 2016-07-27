@@ -160,7 +160,7 @@ public class Driver {
 					System.out.println("Input filename of first solution: ");
 					String firstSolutionFileName = getInput(br);
 					
-					File file1 = new File(path + firstSolutionFileName);
+					File file1 = new File(path + firstSolutionFileName + ".c");
 					CASTCodeAnnotator codeAnnotator = new CASTCodeAnnotator(file1);
 					codeAnnotator.annotateCode();
 					builder.processFirstCode(codeAnnotator.getHeadNode(), "");
@@ -176,7 +176,7 @@ public class Driver {
 						testCaseInputFileName = getInput(br);
 
 						if (!testCaseInputFileName.equals("null")) {
-							tc = new File(path + "TestCases\\" + testCaseInputFileName);
+							tc = new File(path + "TestCases\\" + testCaseInputFileName + ".txt");
 							tci.add(tc);
 						}
 					}
@@ -187,7 +187,7 @@ public class Driver {
 						testCaseOutputFileName = getInput(br);
 
 						if (!testCaseOutputFileName.equals("null")) {
-							tc = new File(path + "TestCases\\" + testCaseOutputFileName);
+							tc = new File(path + "TestCases\\" + testCaseOutputFileName + ".txt");
 							tco.add(tc);
 						}
 					}
