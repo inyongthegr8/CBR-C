@@ -345,7 +345,7 @@ public class Driver {
 		}
 	}
 	
-	private static void scalabilityExperiment(BufferedReader br, CASTGDTStudentTracker students, CASTGDTBuilder builder, String path, ArrayList<File> tci, ArrayList<File> tco) throws ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
+	public static void scalabilityExperiment(BufferedReader br, CASTGDTStudentTracker students, CASTGDTBuilder builder, String path, ArrayList<File> tci, ArrayList<File> tco) throws ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
 		boolean valid = false;
 		System.out.println("Submit Code\n");
 		
@@ -381,7 +381,7 @@ public class Driver {
 		
 	}
 
-	private static void addAutoCase(int CaseNo, CASTGDTBuilder builder, String path) throws IndexOutOfBoundsException, ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
+	public static void addAutoCase(int CaseNo, CASTGDTBuilder builder, String path) throws IndexOutOfBoundsException, ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
 		try
 		{
 			File file = new File(path + "Cases\\C" + CaseNo + ".c");
@@ -410,7 +410,7 @@ public class Driver {
 		
 	}
 
-	private static void addCase(BufferedReader br, CASTGDTBuilder builder, String path) throws ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
+	public static void addCase(BufferedReader br, CASTGDTBuilder builder, String path) throws ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
 		System.out.println("Add faulty case\n");
 		
 		System.out.println("Input path to code: ");
@@ -428,7 +428,7 @@ public class Driver {
 	}
 	
 	//TODO: DO NOT ASK ANYMORE FOR PATH TO CODE, INSTEAD GET LAST SUBMITTED VIA LOG
-	private static void askForHelpAbvr(BufferedReader br,
+	public static void askForHelpAbvr(BufferedReader br,
 			CASTGDTStudentTracker students, CASTGDTBuilder builder, String path)
 			throws IOException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException, Exception {
@@ -447,7 +447,7 @@ public class Driver {
 	
 
 	//TODO: DO NOT ASK ANYMORE FOR PATH TO CODE, INSTEAD GET LAST SUBMITTED VIA LOG
-	private static void askForHelp(BufferedReader br,
+	public static void askForHelp(BufferedReader br,
 			CASTGDTStudentTracker students, CASTGDTBuilder builder, String path)
 			throws IOException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException, Exception {
@@ -464,7 +464,7 @@ public class Driver {
 		builder.askForHelp(students.retrieveStudentID(studentID));
 	}
 	
-	private static void submitNewCodeDebug(BufferedReader br, CASTGDTBuilder builder, String path) throws ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
+	public static void submitNewCodeDebug(BufferedReader br, CASTGDTBuilder builder, String path) throws ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
 		boolean valid = false;
 		
 		System.out.println("Input path to code: ");
@@ -486,7 +486,7 @@ public class Driver {
 		builder.processNewCode(annotator.getHeadNode(), faulty.equals("Y")?true:false, -1);
 	}
 	
-	private static void submitNewCodeAbvr(BufferedReader br,
+	public static void submitNewCodeAbvr(BufferedReader br,
 			CASTGDTStudentTracker students, CASTGDTBuilder builder, String path, ArrayList<File> tci, ArrayList<File> tco)
 			throws IOException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException, Exception {
@@ -536,7 +536,7 @@ public class Driver {
 		/* process New Code will print the necessary feedback */
 	}
 	
-	private static void submitNewCode(BufferedReader br,
+	public static void submitNewCode(BufferedReader br,
 			CASTGDTStudentTracker students, CASTGDTBuilder builder, String path, ArrayList<File> tci, ArrayList<File> tco)
 			throws IOException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException, Exception {
@@ -572,7 +572,7 @@ public class Driver {
 		/* process New Code will print the necessary feedback */
 	}
 
-	private static void registerNewStudent(BufferedReader br,
+	public static void registerNewStudent(BufferedReader br,
 			CASTGDTStudentTracker students, int goalID) throws IOException, SQLException {
 		System.out.println("Register student\n");
 		System.out.println("Input student ID: ");
@@ -595,7 +595,7 @@ public class Driver {
 		return input;
 	}
 
-	private static String getMenuInputAbvr(BufferedReader br) throws IOException {
+	public static String getMenuInputAbvr(BufferedReader br) throws IOException {
 		boolean valid = false;
 		String input = "";
 		while (valid != true) {
@@ -617,7 +617,7 @@ public class Driver {
 		return input;
 	}
 	
-	private static String getMenuInput(BufferedReader br) throws IOException {
+	public static String getMenuInput(BufferedReader br) throws IOException {
 		boolean valid = false;
 		String input = "";
 		while (valid != true) {
@@ -639,12 +639,12 @@ public class Driver {
 		return input;
 	}
 
-//	private static void printGDTBracketNotation(CASTGDTBuilder cgdtBuilder) throws Exception {
+//	public static void printGDTBracketNotation(CASTGDTBuilder cgdtBuilder) throws Exception {
 //		DFSBracketNotationWalker bracket = new DFSBracketNotationWalker(cgdtBuilder.getHeadGDTNode());
 //		System.out.println(bracket.getBracketNotation());
 //	}
 	
-	private static void printGDT(CASTGDTBuilder cgdtBuilder, String path) throws Exception {
+	public static void printGDT(CASTGDTBuilder cgdtBuilder, String path) throws Exception {
 		DFSGenericTreeWalker dfsTreeWalker = new DFSGenericTreeWalker(cgdtBuilder.getHeadGDTNode());
 		File file = new File(path + "GDT.txt");
 		FileOutputStream fos = new FileOutputStream(file);
@@ -674,7 +674,7 @@ public class Driver {
 	}
 
 	@SuppressWarnings("unused")
-	private static TranslationUnitNode createParentNode(File file) throws IOException,
+	public static TranslationUnitNode createParentNode(File file) throws IOException,
 			ClassNotFoundException, InstantiationException,
 			IllegalAccessException, Exception {
 		CASTLexer lexer = new CASTLexer(file);
@@ -707,7 +707,7 @@ public class Driver {
 	}
 
 	@SuppressWarnings("unused")
-	private static void testTokens() {
+	public static void testTokens() {
 		ArrayList<Token> tokens = new ArrayList<Token>();
 		tokens.add(new IntegerVariableIdentifierToken("x"));
 		tokens.add(new AssignmentOperatorToken());
