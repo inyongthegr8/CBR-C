@@ -162,7 +162,7 @@ public class CASTGDTBuilder {
 			}
 			
 			//Removed this code so newly added plan will not interfere in the testing of the timer
-			//addPlanNodeToGDT(planNode);
+			addPlanNodeToGDT(planNode);
 			
 			
 			//TODO: modify handleCodeTrail to only retrive faulty cases
@@ -976,10 +976,10 @@ public class CASTGDTBuilder {
 	private void addPlanNodeToGDT(PlanGDTNode planNode) {
 		//TODO: Modify by not just adding but indexing planNode
 		// ALSO FOR TESTING TOMORROW, MAKE SURE TO DIFFERENTIATE INDEXED ADDING AND NON INDEXED ADDING
-		//indexer.nonIndex(planNode);
-		indexer.index(planNode);
-		//this.getSuperGoal().addChild(planNode);
-		//planNode.setParentNode(this.getSuperGoal());
+		indexer.nonIndex(planNode);
+		//indexer.index(planNode);
+		this.getSuperGoal().addChild(planNode);
+		planNode.setParentNode(this.getSuperGoal());
 	}
 
 }
