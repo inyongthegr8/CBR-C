@@ -18,7 +18,7 @@ public class CASTPreprocessor {
 
 	public void preprocess() throws IOException {
 		String tempFileName = this.source.getPath().substring(0, this.source.getPath().length() - 2) + "-temp.c";
-		// TODO: Remove newline at end of the file, change ++ and -- to non shorthand form, change +=, -=, /= and *= to  non shorthand form
+		// TODO: change ++ and -- to non shorthand form, change +=, -=, /= and *= to  non shorthand form
 		
 		File processed = new File(tempFileName);
 		FileInputStream inputStream = new FileInputStream(this.source);
