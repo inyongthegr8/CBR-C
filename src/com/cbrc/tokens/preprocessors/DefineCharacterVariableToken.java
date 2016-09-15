@@ -1,3 +1,4 @@
+// unused class
 package com.cbrc.tokens.preprocessors;
 
 import java.util.Stack;
@@ -34,21 +35,9 @@ public class DefineCharacterVariableToken extends VariableIdentifierToken {
 	@Override
 	public Token generateCondition(String token, TokenizedCode tokens,
 			Stack<String> currentMarker, String succeedingToken) {
-		if (this.isVariableIdentifier(token, succeedingToken)) {
-			VariableIdentifierToken tokenObject = new IntegerVariableIdentifierToken(token);
-			
-			if (tokens.isVariableRegistered(tokenObject)) {
-				if (tokens.getVariableDataType(tokenObject).equals(this.getDataType())) {
-					return tokenObject;
-				} else return null;
-			} else {
-				
-				if (tokens.peek() instanceof IntKeywordToken) {
-					this.handleAddingToSymbolTable(token, currentMarker, tokens, tokenObject, this.getDataType());
-					return tokenObject;
-				} else return null;
-			}
-		}
+		/* Future implementation.
+		 
+		 */
 		return null;
 	}
 }

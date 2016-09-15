@@ -6,25 +6,25 @@ import com.cbrc.base.Token;
 import com.cbrc.lexers.structs.TokenizedCode;
 import com.cbrc.tokens.PreprocessorToken;
 
-public class ClosingDelimiterToken extends PreprocessorToken {
+public class HeaderFileToken extends PreprocessorToken {
 
-	public ClosingDelimiterToken() {
-		super(">");
+	public HeaderFileToken() {
+		super("");
 	}
 	
 	@Override
 	protected String getAdditionalDetails() {
-		return "Closing Delimiter Token for #include";
+		return "Header File for #include";
 	}
 
 	@Override
 	public Token generateCondition(String token, TokenizedCode tokens,
 			Stack<String> currentMarker, String succeedingToken) {
-		if (token.equals(">") && currentMarker.peek().equals("#include")) {
-			Token tokenObject = new ClosingDelimiterToken();
-			currentMarker.pop();
+		if (currentMarker.peek().equals("#include")) {
+			Token tokenObject = new HeaderFileToken();
 			return tokenObject;
 		}
 		return null;
 	}
+
 }

@@ -1,3 +1,4 @@
+// unused class
 package com.cbrc.tokens.preprocessors;
 
 import java.util.Stack;
@@ -20,11 +21,13 @@ public class DefineKeywordToken extends PreprocessorToken {
 	@Override
 	public Token generateCondition(String token, TokenizedCode tokens,
 			Stack<String> currentMarker, String succeedingToken) {
+		/* Future implementation.
 		if (token.equals("#define")) {
 			Token tokenObject = new DefineKeywordToken();
 			currentMarker.push("#define");
 			return tokenObject;
 		}
+		*/
 		return null;
 	}
 }

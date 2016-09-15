@@ -1,3 +1,4 @@
+// unused class
 package com.cbrc.tokens.preprocessors;
 
 import java.math.BigInteger;
@@ -34,9 +35,11 @@ public class DefineIntegerLiteralToken extends NumericLiteralToken {
 	
 	public Token generateCondition(String token, TokenizedCode tokens,
 			Stack<String> currentMarker, String succeedingToken) {
+		/* Future implementation.
 		if (token.matches(CastConstants.INT_LITERAL_REGEX)) {
 			return new DefineIntegerLiteralToken(token);
 		}
+		*/
 		return null;
 	}
 

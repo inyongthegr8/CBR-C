@@ -11,20 +11,22 @@ import java.io.PrintWriter;
 public class CASTPreprocessor {
 
 	private File source;
-	
+
 	public CASTPreprocessor(File source) {
 		this.source = source;
 	}
 
 	public void preprocess() throws IOException {
 		String tempFileName = this.source.getPath().substring(0, this.source.getPath().length() - 2) + "-temp.c";
-		// TODO: change ++ and -- to non shorthand form, change +=, -=, /= and *= to  non shorthand form
-		
+		// TODO: change ++ and -- to non shorthand form, change +=, -=, /= and
+		// *= to non shorthand form
+		// TODO: change constants to actual values
+
 		File processed = new File(tempFileName);
 		FileInputStream inputStream = new FileInputStream(this.source);
-		
+
 		try {
-			PrintWriter  writer = new PrintWriter(processed);
+			PrintWriter writer = new PrintWriter(processed);
 			try {
 				DataInputStream dataInStream = new DataInputStream(inputStream);
 				try {
@@ -33,18 +35,20 @@ public class CASTPreprocessor {
 						reader.mark(1);
 						while (reader.read() != -1) {
 							reader.reset();
-							
+
 							reader.mark(3);
 							char c1 = (char) reader.read();
 							char c2 = (char) reader.read();
 							
+							/* future implementation.
 							if ((c1 == '+' && c2 == '+') || (c1 == '-' && c2 == '-')) {
-								
+
 							}
-							
+							*/
+
 							reader.mark(1);
 						}
-						
+
 						this.setSource(processed);
 					} finally {
 						reader.close();
@@ -58,7 +62,7 @@ public class CASTPreprocessor {
 		} finally {
 			inputStream.close();
 		}
-		
+
 	}
 
 	public File getSource() {

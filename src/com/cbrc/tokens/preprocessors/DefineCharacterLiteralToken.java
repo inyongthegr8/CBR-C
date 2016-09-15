@@ -39,9 +39,11 @@ public class DefineCharacterLiteralToken extends NonNumericLiteralToken {
 	@Override
 	public Token generateCondition(String token, TokenizedCode tokens,
 			Stack<String> currentMarker, String succeedingToken) {
+		/* Future implementation.
 		if (token.startsWith("'") && token.endsWith("'")) {
 			return new DefineCharacterLiteralToken(token);
 		}
+		*/
 		return null;
 	}
 
