@@ -9,6 +9,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CASTPreprocessor {
 
@@ -36,6 +38,7 @@ public class CASTPreprocessor {
 				try {
 					BufferedReader reader = new BufferedReader(new InputStreamReader(dataInStream));
 					try {
+						// Preprocessor Directives
 						reader.mark(1);
 						while (reader.read() != -1) {
 							reader.reset();
@@ -102,25 +105,28 @@ public class CASTPreprocessor {
 
 							reader.mark(1);
 						}
-
-						/*
-						Scanner scan = new Scanner(inputStream);
-						while(scan.hasNext()){
-							writer.println(scan.nextLine());
-						}
-						scan.close();
-						*/
-						inputStream.getChannel().position(0);
+						inputStream.getChannel().position(0); // reposition to line 1, column 1.
 						String codeLine = "";
 						String prevCodeLine;
 						Scanner sc = new Scanner(inputStream);
-						while(sc.hasNext()){
+ 						while(sc.hasNext()){
 							prevCodeLine = codeLine; // get previous code line
 							codeLine = sc.nextLine(); // gets current code line
 							for(int i = 0; i < cvars.size(); i++)
 							{
+								if(!codeLine.startsWith("#define") && !codeLine.startsWith("#include")) // preprocess directives are out of the question.
+								{
+									Pattern constVarReplacer = Pattern.compile("\\b" + cvars.get(i) + "\\b");
+									Matcher m = constVarReplacer.matcher(codeLine);
+									if (m.find())
+									{
+										codeLine = m.replaceAll(cvals.get(i)); // replace constant variables with the actual constant values
+									}
+								}
+								/* Old Solution. Commented out, deprecated.
 								if(!codeLine.startsWith("#define"))
-									codeLine = codeLine.replace(cvars.get(i), cvals.get(i)); // replace constant variables with the actual constant values
+									codeLine = codeLine.replace(cvars.get(i), cvals.get(i)); // replace constant variables with the actual constant values (Find and Replace a la mode)
+								*/
 							}
 							writer.println(codeLine);
 						}
