@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 public class CASTPreprocessor {
 
@@ -35,12 +36,63 @@ public class CASTPreprocessor {
 						reader.mark(1);
 						while (reader.read() != -1) {
 							reader.reset();
+							
+							reader.mark(8);
 
+							// #define or #import read
+							char keyword[] = new char[8];
+							for(int i = 0; i < keyword.length; i++)
+							{
+								keyword[i] = (char) reader.read();
+							}
+							String res = "";
+							for(int i = 0; i < keyword.length; i++)
+							{
+								res.concat(Character.toString(keyword[i]));
+							}
+							boolean markInclude = res.equals("#include");
+							boolean markDefine = res.equals("#define");
+							while(markInclude)
+							{
+									// Work In Progress
+							}
+							ArrayList<String> cvars = new ArrayList<String>(); // constant variables
+							ArrayList<String> cvals = new ArrayList<String>(); // constant values
+							while(markDefine)
+							{
+									reader.mark(1);
+									reader.read(); // omit spacebar
+									reader.mark(64); // read variables
+									String variable = "";
+									Character c = (char) reader.read();
+									while(c != ' ')
+									{
+										variable.concat(Character.toString(c));
+										c = (char) reader.read();
+									}
+									cvars.add(variable);
+									reader.mark(1);
+									reader.read(); // omit spacebar
+									reader.mark(16); // read variables
+									String value = "";
+									while(c != '\n' || c != '\r')
+									{
+										value.concat(Character.toString(c));
+										c = (char) reader.read();
+									}
+									cvals.add(value);
+									reader.mark(1);
+									reader.read(); // omit newline
+									markDefine = false;
+							}
+							
+							// read variables
+
+							/* future implementation.
 							reader.mark(3);
 							char c1 = (char) reader.read();
 							char c2 = (char) reader.read();
 							
-							/* future implementation.
 							if ((c1 == '+' && c2 == '+') || (c1 == '-' && c2 == '-')) {
 
 							}
