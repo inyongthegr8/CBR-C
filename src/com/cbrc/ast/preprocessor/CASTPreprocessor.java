@@ -34,11 +34,11 @@ public class CASTPreprocessor {
 					BufferedReader reader = new BufferedReader(new InputStreamReader(dataInStream));
 					try {
 						reader.mark(1);
+						ArrayList<String> cvars = new ArrayList<String>(); // constant variables
+						ArrayList<String> cvals = new ArrayList<String>(); // constant values
 						while (reader.read() != -1) {
 							reader.reset();
-							
 							reader.mark(8);
-
 							// #define or #import read
 							char keyword[] = new char[8];
 							for(int i = 0; i < keyword.length; i++)
@@ -54,10 +54,16 @@ public class CASTPreprocessor {
 							boolean markDefine = res.equals("#define");
 							while(markInclude)
 							{
-									// Work In Progress
+								reader.mark(1);
+								reader.read(); // omit spacebar
+								reader.mark(64); // read <filename.h>
+								Character c = (char) reader.read();
+								if(c == '\n' || c == '\r')
+								{
+									markInclude = !markInclude;
+									reader.read();
+								}
 							}
-							ArrayList<String> cvars = new ArrayList<String>(); // constant variables
-							ArrayList<String> cvals = new ArrayList<String>(); // constant values
 							while(markDefine)
 							{
 									reader.mark(1);
