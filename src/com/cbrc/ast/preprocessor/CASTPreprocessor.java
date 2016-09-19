@@ -42,21 +42,19 @@ public class CASTPreprocessor {
 							reader.mark(8);
 							// #define or #import read
 							char keyword[] = new char[8];
-							for(int i = 0; i < keyword.length; i++)
-							{
-								keyword[i] = (char) reader.read();
-							}
 							String res = "";
 							for(int i = 0; i < keyword.length; i++)
 							{
-								res.concat(Character.toString(keyword[i]));
+								char c = (char) reader.read();
+								keyword[i] = c;
+								res += Character.toString(keyword[i]);
 							}
+							res = res.trim();
 							boolean markInclude = res.equals("#include");
 							boolean markDefine = res.equals("#define");
+							if(markInclude) reader.read(); // omit spacebar
 							while(markInclude)
 							{
-								reader.mark(1);
-								reader.read(); // omit spacebar
 								reader.mark(64); // read <filename.h>
 								Character c = (char) reader.read();
 								if(c == '\n' || c == '\r')
@@ -67,24 +65,21 @@ public class CASTPreprocessor {
 							}
 							while(markDefine)
 							{
-								reader.mark(1);
-								reader.read(); // omit spacebar
 								reader.mark(64); // read variables
 								String variable = "";
-								Character c = (char) reader.read();
+								Character c = (char) reader.read(); // read first entry
 								while(c != ' ')
 								{
-									variable.concat(Character.toString(c));
+									variable += Character.toString(c);
 									c = (char) reader.read();
 								}
 								cvars.add(variable);
-								reader.mark(1);
-								reader.read(); // omit spacebar
 								reader.mark(16); // read variables
 								String value = "";
-								while(c != '\n' || c != '\r')
+								c = (char) reader.read(); // read first entry
+								while(c != '\r')
 								{
-									value.concat(Character.toString(c));
+									value += Character.toString(c);
 									c = (char) reader.read();
 								}
 								cvals.add(value);
@@ -119,6 +114,7 @@ public class CASTPreprocessor {
 							{
 								codeLine = codeLine.replace(cvars.get(i), cvals.get(i)); // replace constant variables with the actual constant values
 							}
+							writer.println(codeLine);
 						}
 						sc.close();
 					}

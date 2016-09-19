@@ -43,7 +43,7 @@ public class CASTCodeAnnotator {
 	
 	private TranslationUnitNode createParentNode(File file) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
 		CASTPreprocessor preprocessor = new CASTPreprocessor(file);
-		//preprocessor.preprocess();
+		preprocessor.preprocess();
 
 		CASTLexer lexer = new CASTLexer(preprocessor.getSource());
 		if (this.debug == true) lexer.setDebug(true);
