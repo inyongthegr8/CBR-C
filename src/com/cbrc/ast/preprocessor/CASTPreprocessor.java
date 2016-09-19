@@ -128,7 +128,11 @@ public class CASTPreprocessor {
 									codeLine = codeLine.replace(cvars.get(i), cvals.get(i)); // replace constant variables with the actual constant values (Find and Replace a la mode)
 								*/
 							}
-							writer.println(codeLine);
+							if(codeLine.startsWith("#define"))
+							{
+								writer.print("");
+							}
+							else writer.println(codeLine);
 						}
 						sc.close();
 						this.setSource(processed);
