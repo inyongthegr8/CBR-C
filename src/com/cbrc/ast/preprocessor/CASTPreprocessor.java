@@ -66,30 +66,30 @@ public class CASTPreprocessor {
 							}
 							while(markDefine)
 							{
-									reader.mark(1);
-									reader.read(); // omit spacebar
-									reader.mark(64); // read variables
-									String variable = "";
-									Character c = (char) reader.read();
-									while(c != ' ')
-									{
-										variable.concat(Character.toString(c));
-										c = (char) reader.read();
-									}
-									cvars.add(variable);
-									reader.mark(1);
-									reader.read(); // omit spacebar
-									reader.mark(16); // read variables
-									String value = "";
-									while(c != '\n' || c != '\r')
-									{
-										value.concat(Character.toString(c));
-										c = (char) reader.read();
-									}
-									cvals.add(value);
-									reader.mark(1);
-									reader.read(); // omit newline
-									markDefine = false;
+								reader.mark(1);
+								reader.read(); // omit spacebar
+								reader.mark(64); // read variables
+								String variable = "";
+								Character c = (char) reader.read();
+								while(c != ' ')
+								{
+									variable.concat(Character.toString(c));
+									c = (char) reader.read();
+								}
+								cvars.add(variable);
+								reader.mark(1);
+								reader.read(); // omit spacebar
+								reader.mark(16); // read variables
+								String value = "";
+								while(c != '\n' || c != '\r')
+								{
+									value.concat(Character.toString(c));
+									c = (char) reader.read();
+								}
+								cvals.add(value);
+								reader.mark(1);
+								reader.read(); // omit newline
+								markDefine = false;
 							}
 							
 							// read variables
