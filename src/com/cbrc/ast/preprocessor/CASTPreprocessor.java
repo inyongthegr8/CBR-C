@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class CASTPreprocessor {
 
@@ -27,6 +28,8 @@ public class CASTPreprocessor {
 		FileInputStream inputStream = new FileInputStream(this.source);
 
 		try {
+			ArrayList<String> cvars = new ArrayList<String>(); // constant variables
+			ArrayList<String> cvals = new ArrayList<String>(); // constant values
 			PrintWriter writer = new PrintWriter(processed);
 			try {
 				DataInputStream dataInStream = new DataInputStream(inputStream);
@@ -34,8 +37,6 @@ public class CASTPreprocessor {
 					BufferedReader reader = new BufferedReader(new InputStreamReader(dataInStream));
 					try {
 						reader.mark(1);
-						ArrayList<String> cvars = new ArrayList<String>(); // constant variables
-						ArrayList<String> cvals = new ArrayList<String>(); // constant values
 						while (reader.read() != -1) {
 							reader.reset();
 							reader.mark(8);
@@ -106,18 +107,38 @@ public class CASTPreprocessor {
 
 							reader.mark(1);
 						}
-
 						this.setSource(processed);
-					} finally {
+
+						String codeLine = "";
+						String prevCodeLine;
+						Scanner sc = new Scanner(inputStream);
+						while(sc.hasNext()){
+							prevCodeLine = codeLine; // get previous code line
+							codeLine = sc.nextLine(); // gets current code line
+							for(int i = 0; i < cvars.size(); i++)
+							{
+								codeLine = codeLine.replace(cvars.get(i), cvals.get(i)); // replace constant variables with the actual constant values
+							}
+						}
+						sc.close();
+					}
+					finally 
+					{
 						reader.close();
 					}
-				} finally {
+				}
+				finally 
+				{
 					dataInStream.close();
 				}
-			} finally {
+			}
+			finally 
+			{
 				writer.close();
 			}
-		} finally {
+		}
+		finally 
+		{
 			inputStream.close();
 		}
 
