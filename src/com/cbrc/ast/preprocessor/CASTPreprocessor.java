@@ -116,7 +116,7 @@ public class CASTPreprocessor {
 							{
 								if(!codeLine.startsWith("#define") && !codeLine.startsWith("#include")) // preprocess directives are out of the question.
 								{
-									Pattern constVarReplacer = Pattern.compile("(?!\')(?!\")\\b" + cvars.get(i) + "\\b(?!\")(?!\')");
+									Pattern constVarReplacer = Pattern.compile("(?!\')(?!\")\\b" + cvars.get(i) + "\\b(?!\")(?!\')(?!>)");
 									Matcher m = constVarReplacer.matcher(codeLine);
 									if (m.find())
 									{
