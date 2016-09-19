@@ -102,8 +102,15 @@ public class CASTPreprocessor {
 
 							reader.mark(1);
 						}
-						this.setSource(processed);
 
+						/*
+						Scanner scan = new Scanner(inputStream);
+						while(scan.hasNext()){
+							writer.println(scan.nextLine());
+						}
+						scan.close();
+						*/
+						inputStream.getChannel().position(0);
 						String codeLine = "";
 						String prevCodeLine;
 						Scanner sc = new Scanner(inputStream);
@@ -112,11 +119,13 @@ public class CASTPreprocessor {
 							codeLine = sc.nextLine(); // gets current code line
 							for(int i = 0; i < cvars.size(); i++)
 							{
-								codeLine = codeLine.replace(cvars.get(i), cvals.get(i)); // replace constant variables with the actual constant values
+								if(!codeLine.startsWith("#define"))
+									codeLine = codeLine.replace(cvars.get(i), cvals.get(i)); // replace constant variables with the actual constant values
 							}
 							writer.println(codeLine);
 						}
 						sc.close();
+						this.setSource(processed);
 					}
 					finally 
 					{
