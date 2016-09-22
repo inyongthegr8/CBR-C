@@ -132,7 +132,13 @@ public class CASTPreprocessor {
 							{
 								writer.print("");
 							}
-							else writer.println(codeLine);
+							else
+							{
+								if(sc.hasNext())
+									writer.println(codeLine);
+								else
+									writer.print(codeLine); // EOF!
+							}
 						}
 						sc.close();
 						this.setSource(processed);
