@@ -38,7 +38,35 @@ public class CASTPreprocessor {
 				try {
 					BufferedReader reader = new BufferedReader(new InputStreamReader(dataInStream));
 					try {
+						Scanner sc = new Scanner(inputStream);
+						// NEW
+						String codeLine = "";
+						String prevCodeLine;
+						boolean preprocess = true;
+ 						while(preprocess)
+ 						{
+ 							// get #define
+ 							prevCodeLine = codeLine;
+ 							codeLine = reader.readLine();
+ 							if(codeLine.startsWith("//") || codeLine.startsWith("/*") || codeLine.startsWith("*/") || codeLine.startsWith("#include"))
+ 							{
+ 								// DO NOTHING
+ 							}
+ 							else if(codeLine.startsWith("#define"))
+ 							{
+ 								String variable = codeLine.substring("#define".length() + 1, codeLine.lastIndexOf(" "));
+ 								String value = codeLine.substring(codeLine.lastIndexOf(" ") + 1);
+ 								cvars.add(variable);
+ 								cvals.add(value);
+ 							}
+ 							else
+ 							{
+ 								preprocess = !preprocess;
+ 							}
+ 						}
+						// inputStream.getChannel().position(0); // reposition to line 1, column 1.
 						// Preprocessor Directives
+						/* OLD
 						reader.mark(1);
 						while (reader.read() != -1) {
 							reader.reset();
@@ -93,22 +121,22 @@ public class CASTPreprocessor {
 							
 							// read variables
 
-							/* future implementation.
-							reader.mark(3);
-							char c1 = (char) reader.read();
-							char c2 = (char) reader.read();
+							// future implementation.
+							// reader.mark(3);
+							//char c1 = (char) reader.read();
+							//char c2 = (char) reader.read();
 							
-							if ((c1 == '+' && c2 == '+') || (c1 == '-' && c2 == '-')) {
+							//if ((c1 == '+' && c2 == '+') || (c1 == '-' && c2 == '-')) {
 
 							}
-							*/
+							
 
 							reader.mark(1);
 						}
+						*/
 						inputStream.getChannel().position(0); // reposition to line 1, column 1.
-						String codeLine = "";
-						String prevCodeLine;
-						Scanner sc = new Scanner(inputStream);
+						codeLine = "";
+						prevCodeLine = "";
  						while(sc.hasNext()){
 							prevCodeLine = codeLine; // get previous code line
 							codeLine = sc.nextLine(); // gets current code line
