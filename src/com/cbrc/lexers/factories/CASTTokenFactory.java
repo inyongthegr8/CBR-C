@@ -22,17 +22,22 @@ public class CASTTokenFactory {
 		Token tokenObject = null;
 		//if (token.equals("nX")) System.out.println();
 		for (String className:this.tokenList) {
-			//if (token.equals("nX")) System.out.print(this.getClass().getName() + ": LOADING CLASS: " + className);
-			Class<?> clazz = this.classLoader.loadClass(className);
-			Token tokenType = (Token) clazz.newInstance();
-			
-			tokenObject = tokenType.generateCondition(token, tokens, currentMarker, succeedingToken);
-			if (tokenObject != null) {
-				//if (token.equals("nX"))System.out.println(": TOKEN GENERATED FOR TOKEN " + token + "!");
-				return tokenObject;
-			}//else if (token.equals("nX")) System.out.println();
-			else {
-				break;
+			if(token.length() != 0 && succeedingToken != null)
+			{
+				//if (token.equals("nX")) System.out.print(this.getClass().getName() + ": LOADING CLASS: " + className);
+				Class<?> clazz = this.classLoader.loadClass(className);
+				Token tokenType = (Token) clazz.newInstance();
+				
+				tokenObject = tokenType.generateCondition(token, tokens, currentMarker, succeedingToken);
+				if (tokenObject != null) {
+					//if (token.equals("nX"))System.out.println(": TOKEN GENERATED FOR TOKEN " + token + "!");
+					return tokenObject;
+				}//else if (token.equals("nX")) System.out.println();
+				/*
+				else {
+					break;
+				}
+				*/
 			}
 		}
 		return null;
