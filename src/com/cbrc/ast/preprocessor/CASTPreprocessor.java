@@ -207,10 +207,29 @@ public class CASTPreprocessor {
 								if(codeLine.indexOf("*/") >= 0)
 								{
 									multiLineComment = !multiLineComment;
+									String another = codeLine.substring(codeLine.indexOf("*/") + 2);
 									if(sc.hasNext())
-										writer.println(codeLine.substring(codeLine.indexOf("*/") + 2));
+									{
+										// Case 2.2: Multi Line comment ends with additional single line comments
+										// Case 2.3: Multi Line comment ends with additional multi line comments (after Case 2.2)
+										if(another.indexOf("//") >= 0)
+											writer.println(another.substring(0, codeLine.indexOf("//") - 1));
+										else if(another.indexOf("/*") >= 0)
+										{
+											writer.println(another.substring(0, codeLine.indexOf("/*") - 1));
+											multiLineComment = !multiLineComment;
+										}
+										else
+											writer.println(another);
+									}
 									else
-										writer.print(codeLine.substring(codeLine.indexOf("*/") + 2));
+									{
+										// Case 2.2: Multi Line comment ends with additional single line comments
+										if(another.indexOf("//") >= 0)
+											writer.print(another.substring(0, codeLine.indexOf("//") - 1));
+										else
+											writer.print(another);
+									}
 								}
 							}
 							else
