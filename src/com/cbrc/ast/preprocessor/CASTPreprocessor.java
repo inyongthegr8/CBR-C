@@ -32,6 +32,8 @@ public class CASTPreprocessor {
 		try {
 			ArrayList<String> cvars = new ArrayList<String>(); // constant variables
 			ArrayList<String> cvals = new ArrayList<String>(); // constant values
+			ArrayList<String> vars = new ArrayList<String>(); // variables
+			ArrayList<String> vals = new ArrayList<String>(); // values
 			PrintWriter writer = new PrintWriter(processed);
 			try {
 				DataInputStream dataInStream = new DataInputStream(inputStream);
@@ -64,6 +66,7 @@ public class CASTPreprocessor {
  								preprocess = !preprocess;
  							}
  						}
+ 						preprocess = true;
 						// inputStream.getChannel().position(0); // reposition to line 1, column 1.
 						// Preprocessor Directives
 						/* OLD
@@ -137,6 +140,7 @@ public class CASTPreprocessor {
 						inputStream.getChannel().position(0); // reposition to line 1, column 1.
 						codeLine = "";
 						prevCodeLine = "";
+						boolean multiLineComment = false;
  						while(sc.hasNext()){
 							prevCodeLine = codeLine; // get previous code line
 							codeLine = sc.nextLine(); // gets current code line
@@ -160,6 +164,54 @@ public class CASTPreprocessor {
 							if(codeLine.startsWith("#define"))
 							{
 								writer.print("");
+							}
+							else if(codeLine.startsWith("//"))
+							{
+								writer.print("");
+							}
+							else if(codeLine.indexOf("//") >= 0)
+							{
+								// will work with the ff. examples: 
+								// (0, 0) - // example
+								// (0, n - 1) - [code] // example
+								if(sc.hasNext())
+									writer.println(codeLine.substring(0, codeLine.indexOf("//") - 1));
+								else
+									writer.print(codeLine.substring(0, codeLine.indexOf("//") - 1));
+							}
+							else if(codeLine.indexOf("/*") >= 0)
+							{
+								// MLC = on
+								multiLineComment = true;
+								// Case 1: Multi Line comment ends with closing MLC
+								if(codeLine.indexOf("*/") >= 0)
+								{
+									multiLineComment = !multiLineComment;
+									if(sc.hasNext())
+										writer.println(codeLine.substring(0, codeLine.indexOf("/*") - 1));
+									else
+										writer.print(codeLine.substring(0, codeLine.indexOf("/*") - 1));
+								}
+								else
+								{
+									if(sc.hasNext())
+										writer.println(codeLine.substring(0, codeLine.indexOf("/*") - 1));
+									else
+										writer.print(codeLine.substring(0, codeLine.indexOf("/*") - 1));
+								}
+							}
+							else if(multiLineComment)
+							{
+								// Case 2: Multi Line comment is really a multi line comment
+								// Case 2.1: Multi Line comment ends with closing MLC, with or without the methods.
+								if(codeLine.indexOf("*/") >= 0)
+								{
+									multiLineComment = !multiLineComment;
+									if(sc.hasNext())
+										writer.println(codeLine.substring(codeLine.indexOf("*/") + 2));
+									else
+										writer.print(codeLine.substring(codeLine.indexOf("*/") + 2));
+								}
 							}
 							else
 							{
