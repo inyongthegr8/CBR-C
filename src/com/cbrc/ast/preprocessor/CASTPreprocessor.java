@@ -32,6 +32,7 @@ public class CASTPreprocessor {
 		try {
 			ArrayList<String> cvars = new ArrayList<String>(); // constant variables
 			ArrayList<String> cvals = new ArrayList<String>(); // constant values
+			ArrayList<String> types = new ArrayList<String>(); // datatype
 			ArrayList<String> vars = new ArrayList<String>(); // variables
 			ArrayList<String> vals = new ArrayList<String>(); // values
 			PrintWriter writer = new PrintWriter(processed);
@@ -60,6 +61,108 @@ public class CASTPreprocessor {
  								String value = codeLine.substring(codeLine.lastIndexOf(" ") + 1);
  								cvars.add(variable);
  								cvals.add(value);
+ 							}
+ 							else if((codeLine.trim().startsWith("int ") || 
+ 									codeLine.trim().startsWith("long ") || 
+ 									codeLine.trim().startsWith("float ") ||
+ 									codeLine.trim().startsWith("double ") ||
+ 									codeLine.trim().startsWith("char ")) &&
+ 									codeLine.trim().endsWith(";"))
+ 							{
+ 								String trimmedCodeLine = codeLine.trim();
+ 								String type = "";
+ 								if(trimmedCodeLine.startsWith("int "))
+ 									type = "int";
+ 								else if (trimmedCodeLine.startsWith("long "))
+ 									type = "long";
+ 								else if (trimmedCodeLine.startsWith("float "))
+ 									type = "float";
+ 								else if (trimmedCodeLine.startsWith("double "))
+ 									type = "double";
+ 								else if (trimmedCodeLine.startsWith("char "))
+ 									type = "char";
+ 								// multiple declarations in one line check
+ 								if(trimmedCodeLine.indexOf(";") < trimmedCodeLine.length())
+ 								{
+ 									// single declarations only
+ 									int indexStart = 0;
+ 									// multiple cases
+ 									if(type.equals("int"))
+ 	 									indexStart = "int ".length();
+ 	 								else if (type.equals("long"))
+ 	 									indexStart = "long ".length();
+ 	 								else if (type.equals("float"))
+ 	 									indexStart = "float ".length();
+ 	 								else if (type.equals("double"))
+ 	 									indexStart = "double ".length();
+ 	 								else if (type.equals("char"))
+ 	 									indexStart = "char ".length();
+
+						      		// beforehand, capture all character ';' and ',' to prevent anomalies.
+									trimmedCodeLine.replaceAll("\',\'", "\'comma\'");
+									trimmedCodeLine.replaceAll("\';\'", "\'sc\'");
+ 								 	trimmedCodeLine = trimmedCodeLine.substring(indexStart, trimmedCodeLine.indexOf(";"));
+ 							      	do
+ 							      	{
+ 							      	    if(trimmedCodeLine.indexOf(",") > 0)
+ 							      	    {
+ 		 							      	/*
+ 		 									*do multiple cases*
+ 		 									Case 3.	get multiple variable declarations
+ 		 											capture every after comma, follow single case methods.
+ 											*/
+ 							      	    	types.add(type);
+ 							      	        if(trimmedCodeLine.indexOf("=") > 0)
+ 							      	        {
+ 									      		// beforehand, restore the first occurrence of 'sc' and 'comma' to prevent anomalies, whenever applicable
+ 									      		trimmedCodeLine.replaceFirst("\'comma\'", "\',\'");
+ 									      		trimmedCodeLine.replaceFirst("\'sc\'", "\';\'");
+ 	 							      	        vars.add(trimmedCodeLine.substring(0, trimmedCodeLine.indexOf("=")).trim());
+ 							      	        	vals.add(trimmedCodeLine.substring(trimmedCodeLine.indexOf("=") + 1, trimmedCodeLine.indexOf(",")).trim()); // consider value declarations too
+ 							      	        }
+ 							      	        else
+						      	        	{
+ 	 							      	        vars.add(trimmedCodeLine.substring(0, trimmedCodeLine.indexOf(",")).trim());
+ 							      	        	vals.add("NOTINIT");
+						      	        	}
+ 							      	        trimmedCodeLine = trimmedCodeLine.substring(trimmedCodeLine.indexOf(",") + 1).trim();
+ 							      	    }
+ 							      	    else
+ 							      	    {
+ 		 									/*
+ 		 									*do single case*
+ 		 									Case 1.	get undeclared variables
+ 		 											capture after whitespace until indexOf(";") - 1. Trim the variable name if necessary.
+ 		 									Case 2. get declared variables
+ 		 											Follow case 1 method.
+ 		 											if the datatype is char, capture the open and closing single quotes through startsWith("\'") and endsWith("\'"). Trim unnecessary whitespaces.
+ 											*/
+ 							      	    	types.add(type);
+ 							      	        if(trimmedCodeLine.indexOf("=") > 0)
+ 							      	        {
+ 									      		// beforehand, restore all character 'sc' and 'comma' to prevent anomalies, whenever applicable, if the type is char ONLY!
+ 							      	        	if (type.equals("char"))
+ 			 									{
+	 									      		trimmedCodeLine.replaceAll("\'comma\'", "\',\'");
+	 									      		trimmedCodeLine.replaceAll("\'sc\'", "\';\'");
+ 			 									}
+ 	 							      	        vars.add(trimmedCodeLine.substring(0, trimmedCodeLine.indexOf("=")).trim());
+ 							      	        	vals.add(trimmedCodeLine.substring(trimmedCodeLine.indexOf("=") + 1, trimmedCodeLine.indexOf(",")).trim()); // consider value declarations too
+ 							      	        }
+ 							      	        else
+						      	        	{
+ 							      	        	vals.add(trimmedCodeLine.trim());
+ 							      	        	vals.add("NOTINIT");
+						      	        	}
+ 							      	        trimmedCodeLine = "";
+ 							      	    }
+ 							      	}
+ 							      	while (!trimmedCodeLine.isEmpty());
+ 								}
+ 								else
+ 								{
+ 									// gagawin ko nalang tong method mamaya
+ 								}
  							}
  							else
  							{
