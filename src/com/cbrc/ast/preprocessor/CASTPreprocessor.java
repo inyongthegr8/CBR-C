@@ -62,109 +62,49 @@ public class CASTPreprocessor {
  								cvars.add(variable);
  								cvals.add(value);
  							}
- 							else if((codeLine.trim().startsWith("int ") || 
+ 							else if(codeLine.trim().startsWith("int ") || 
  									codeLine.trim().startsWith("long ") || 
  									codeLine.trim().startsWith("float ") ||
  									codeLine.trim().startsWith("double ") ||
- 									codeLine.trim().startsWith("char ")) &&
- 									codeLine.trim().endsWith(";"))
+ 									codeLine.trim().startsWith("char "))
  							{
  								String trimmedCodeLine = codeLine.trim();
- 								String type = "";
- 								if(trimmedCodeLine.startsWith("int "))
- 									type = "int";
- 								else if (trimmedCodeLine.startsWith("long "))
- 									type = "long";
- 								else if (trimmedCodeLine.startsWith("float "))
- 									type = "float";
- 								else if (trimmedCodeLine.startsWith("double "))
- 									type = "double";
- 								else if (trimmedCodeLine.startsWith("char "))
- 									type = "char";
+ 								String type = typeCheck(trimmedCodeLine);
  								// multiple declarations in one line check
- 								if(trimmedCodeLine.indexOf(";") < trimmedCodeLine.length())
+ 								if(trimmedCodeLine.indexOf(";") == trimmedCodeLine.length() - 1)
  								{
- 									// single declarations only
- 									int indexStart = 0;
- 									// multiple cases
- 									if(type.equals("int"))
- 	 									indexStart = "int ".length();
- 	 								else if (type.equals("long"))
- 	 									indexStart = "long ".length();
- 	 								else if (type.equals("float"))
- 	 									indexStart = "float ".length();
- 	 								else if (type.equals("double"))
- 	 									indexStart = "double ".length();
- 	 								else if (type.equals("char"))
- 	 									indexStart = "char ".length();
-
-						      		// beforehand, capture all character ';' and ',' to prevent anomalies.
-									trimmedCodeLine.replaceAll("\',\'", "\'comma\'");
-									trimmedCodeLine.replaceAll("\';\'", "\'sc\'");
- 								 	trimmedCodeLine = trimmedCodeLine.substring(indexStart, trimmedCodeLine.indexOf(";"));
- 							      	do
- 							      	{
- 							      	    if(trimmedCodeLine.indexOf(",") > 0)
- 							      	    {
- 		 							      	/*
- 		 									*do multiple cases*
- 		 									Case 3.	get multiple variable declarations
- 		 											capture every after comma, follow single case methods.
- 											*/
- 							      	    	types.add(type);
- 							      	        if(trimmedCodeLine.indexOf("=") > 0)
- 							      	        {
- 									      		// beforehand, restore the first occurrence of 'sc' and 'comma' to prevent anomalies, whenever applicable
- 									      		trimmedCodeLine.replaceFirst("\'comma\'", "\',\'");
- 									      		trimmedCodeLine.replaceFirst("\'sc\'", "\';\'");
- 	 							      	        vars.add(trimmedCodeLine.substring(0, trimmedCodeLine.indexOf("=")).trim());
- 							      	        	vals.add(trimmedCodeLine.substring(trimmedCodeLine.indexOf("=") + 1, trimmedCodeLine.indexOf(",")).trim()); // consider value declarations too
- 							      	        }
- 							      	        else
-						      	        	{
- 	 							      	        vars.add(trimmedCodeLine.substring(0, trimmedCodeLine.indexOf(",")).trim());
- 							      	        	vals.add("NOTINIT");
-						      	        	}
- 							      	        trimmedCodeLine = trimmedCodeLine.substring(trimmedCodeLine.indexOf(",") + 1).trim();
- 							      	    }
- 							      	    else
- 							      	    {
- 		 									/*
- 		 									*do single case*
- 		 									Case 1.	get undeclared variables
- 		 											capture after whitespace until indexOf(";") - 1. Trim the variable name if necessary.
- 		 									Case 2. get declared variables
- 		 											Follow case 1 method.
- 		 											if the datatype is char, capture the open and closing single quotes through startsWith("\'") and endsWith("\'"). Trim unnecessary whitespaces.
- 											*/
- 							      	    	types.add(type);
- 							      	        if(trimmedCodeLine.indexOf("=") > 0)
- 							      	        {
- 									      		// beforehand, restore all character 'sc' and 'comma' to prevent anomalies, whenever applicable, if the type is char ONLY!
- 							      	        	if (type.equals("char"))
- 			 									{
-	 									      		trimmedCodeLine.replaceAll("\'comma\'", "\',\'");
-	 									      		trimmedCodeLine.replaceAll("\'sc\'", "\';\'");
- 			 									}
- 	 							      	        vars.add(trimmedCodeLine.substring(0, trimmedCodeLine.indexOf("=")).trim());
- 							      	        	vals.add(trimmedCodeLine.substring(trimmedCodeLine.indexOf("=") + 1, trimmedCodeLine.indexOf(",")).trim()); // consider value declarations too
- 							      	        }
- 							      	        else
-						      	        	{
- 							      	        	vals.add(trimmedCodeLine.trim());
- 							      	        	vals.add("NOTINIT");
-						      	        	}
- 							      	        trimmedCodeLine = "";
- 							      	    }
- 							      	}
- 							      	while (!trimmedCodeLine.isEmpty());
+ 									getAllVariables(trimmedCodeLine, type, types, vars, vals);
  								}
  								else
  								{
- 									// gagawin ko nalang tong method mamaya
+ 									do
+ 									{
+ 										if(trimmedCodeLine.indexOf(";") == trimmedCodeLine.length() - 1)
+ 		 								{
+ 											// if type declaration is done, else, make it empty, since it's the last declaration
+ 											if(!type.isEmpty())
+ 	 										{
+	 											// do the single
+	 		 									getAllVariables(trimmedCodeLine, type, types, vars, vals);
+ 	 										}
+ 		 									trimmedCodeLine = "";
+ 		 								}
+ 										else
+ 										{
+ 											// if type declaration is done, else, proceed to the next statement, since there's a next declaration
+ 											if(!type.isEmpty())
+ 	 										{
+	 											// do the multiple
+	 		 									getAllVariables(trimmedCodeLine, type, types, vars, vals);
+ 	 										}
+ 		 							        trimmedCodeLine = trimmedCodeLine.substring(trimmedCodeLine.indexOf(";") + 1).trim();
+ 		 							        type = typeCheck(trimmedCodeLine);
+ 										}
+ 									}
+ 									while(!trimmedCodeLine.isEmpty());
  								}
  							}
- 							else
+ 							else if(sc.hasNext())
  							{
  								preprocess = !preprocess;
  							}
@@ -489,5 +429,105 @@ public class CASTPreprocessor {
 	public void setSource(File source) {
 		this.source = source;
 	}
+	
+	public void getAllVariables(String trimmedCodeLine, String type, ArrayList<String> types, ArrayList<String> vars, ArrayList<String> vals) {
+		// single declarations only
+		int indexStart = 0;
+		// multiple cases
+		if(type.equals("int"))
+			indexStart = "int ".length();
+		else if (type.equals("long"))
+			indexStart = "long ".length();
+		else if (type.equals("float"))
+			indexStart = "float ".length();
+		else if (type.equals("double"))
+			indexStart = "double ".length();
+		else if (type.equals("char"))
+			indexStart = "char ".length();
 
+  		// beforehand, capture all character ';' and ',' to prevent anomalies.
+		trimmedCodeLine.replaceAll("\',\'", "\'comma\'");
+		trimmedCodeLine.replaceAll("\';\'", "\'sc\'");
+	 	String currentDeclaration = trimmedCodeLine.substring(indexStart, trimmedCodeLine.indexOf(";"));
+      	do
+      	{
+      	    if(currentDeclaration.indexOf(",") > 0)
+      	    {
+		      	/*
+				*do multiple cases*
+				Case 3.	get multiple variable declarations
+						capture every after comma, follow single case methods.
+				*/
+      	    	types.add(type);
+      	        if(currentDeclaration.indexOf("=") > 0)
+      	        {
+		      		// beforehand, restore the first occurrence of 'sc' and 'comma' to prevent anomalies, whenever applicable
+      	        	if (type.equals("char"))
+					{
+			      		currentDeclaration.replaceFirst("\'comma\'", "\',\'");
+			      		currentDeclaration.replaceFirst("\'sc\'", "\';\'");
+					}
+	      	        vars.add(currentDeclaration.substring(0, currentDeclaration.indexOf("=")).trim());
+      	        	vals.add(currentDeclaration.substring(currentDeclaration.indexOf("=") + 1, currentDeclaration.indexOf(",")).trim()); // consider value declarations too
+      	        }
+      	        else
+      	        {
+	      	        vars.add(currentDeclaration.substring(0, currentDeclaration.indexOf(",")).trim());
+      	        	vals.add("NOTINIT");
+      	        }
+      	        currentDeclaration = currentDeclaration.substring(currentDeclaration.indexOf(",") + 1).trim();
+      	    }
+      	    else
+      	    {
+				/*
+				*do single case*
+				Case 1.	get undeclared variables
+						capture after whitespace until indexOf(";") - 1. Trim the variable name if necessary.
+				Case 2. get declared variables
+						Follow case 1 method.
+						if the datatype is char, capture the open and closing single quotes through startsWith("\'") and endsWith("\'"). Trim unnecessary whitespaces.
+				*/
+      	    	types.add(type);
+      	        if(currentDeclaration.indexOf("=") > 0)
+      	        {
+		      		// beforehand, restore all character 'sc' and 'comma' to prevent anomalies, whenever applicable, if the type is char ONLY!
+      	        	if (type.equals("char"))
+					{
+			      		currentDeclaration.replaceAll("\'comma\'", "\',\'");
+			      		currentDeclaration.replaceAll("\'sc\'", "\';\'");
+					}
+	      	        vars.add(currentDeclaration.substring(0, currentDeclaration.indexOf("=")).trim());
+      	        	vals.add(currentDeclaration.substring(currentDeclaration.indexOf("=") + 1).trim()); // consider value declarations too
+      	        }
+      	        else
+      	        {
+      	        	vals.add(currentDeclaration.trim());
+      	        	vals.add("NOTINIT");
+        		}
+      	        currentDeclaration = "";
+      	    }
+      	}
+      	while (!currentDeclaration.isEmpty());
+	}
+	
+	public String typeCheck(String dec)
+	{
+		String res = "";
+		if(dec.startsWith("int "))
+			res = "int";
+		else if (dec.startsWith("long "))
+			res = "long";
+		else if (dec.startsWith("float "))
+			res = "float";
+		else if (dec.startsWith("double "))
+			res = "double";
+		else if (dec.startsWith("char "))
+			res = "char";
+		return res;
+	}
+	
+	public String commentRemover(String lineContainingComment)
+	{
+		return "not yet implemented";
+	}
 }
