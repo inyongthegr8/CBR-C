@@ -218,9 +218,9 @@ public class CASTPreprocessor {
 								// (0, 0) - // example
 								// (0, n - 1) - [code] // example
 								if(sc.hasNext())
-									writer.println(codeLine.substring(0, codeLine.indexOf("//") - 1));
+									writer.println(commentRemover(codeLine));
 								else
-									writer.print(codeLine.substring(0, codeLine.indexOf("//") - 1));
+									writer.print(commentRemover(codeLine));
 							}
 							else if(codeLine.indexOf("/*") >= 0)
 							{
@@ -231,16 +231,16 @@ public class CASTPreprocessor {
 								{
 									multiLineComment = !multiLineComment;
 									if(sc.hasNext())
-										writer.println(codeLine.substring(0, codeLine.indexOf("/*") - 1));
+										writer.println(commentRemover(codeLine));
 									else
-										writer.print(codeLine.substring(0, codeLine.indexOf("/*") - 1));
+										writer.print(commentRemover(codeLine));
 								}
 								else
 								{
 									if(sc.hasNext())
-										writer.println(codeLine.substring(0, codeLine.indexOf("/*") - 1));
+										writer.println(commentRemover(codeLine));
 									else
-										writer.print(codeLine.substring(0, codeLine.indexOf("/*") - 1));
+										writer.print(commentRemover(codeLine));
 								}
 							}
 							else if(multiLineComment)
@@ -250,150 +250,95 @@ public class CASTPreprocessor {
 								if(codeLine.indexOf("*/") >= 0)
 								{
 									multiLineComment = !multiLineComment;
-									String another = codeLine.substring(codeLine.indexOf("*/") + 2);
 									if(sc.hasNext())
 									{
 										// Case 2.2: Multi Line comment ends with additional single line comments
 										// Case 2.3: Multi Line comment ends with additional multi line comments (after Case 2.2)
-										if(another.indexOf("//") >= 0)
-											writer.println(another.substring(0, codeLine.indexOf("//") - 1));
-										else if(another.indexOf("/*") >= 0)
+										if(codeLine.indexOf("//") >= 0)
+											writer.println(commentRemover(codeLine));
+										else if(codeLine.indexOf("/*") >= 0)
 										{
-											writer.println(another.substring(0, codeLine.indexOf("/*") - 1));
+											writer.println(commentRemover(codeLine));
 											multiLineComment = !multiLineComment;
 										}
 										else
-											writer.println(another);
+											writer.println(commentRemover(codeLine));
 									}
 									else
 									{
-										// Case 2.2: Multi Line comment ends with additional single line comments
-										if(another.indexOf("//") >= 0)
-											writer.print(another.substring(0, codeLine.indexOf("//") - 1));
+										if(codeLine.indexOf("//") >= 0)
+											writer.print(commentRemover(codeLine.substring(0, codeLine.indexOf("//") - 1)));
 										else
-											writer.print(another);
+											writer.print(commentRemover(codeLine));
 									}
 								}
 							}
 							else
 							{
+								String modifiedCodeLine = codeLine;
 								if(sc.hasNext())
 								{
-									String datatype = "";
-									//single variable declaration for multiple lines (Capture datatypes first and maybe try to capture the FIRST variable as well)
-									Pattern declarationConversion = Pattern.compile("\\b(?:(?:long\\s*|char\\s*|int\\s*|float\\s*|double\\s*)+)" // get data type
-											+ "(?:\\s+\\s*)"
-											+ "(([a-zA-Z_][a-zA-Z0-9_]*)" // get the variables
-											+ "\\s*[;,=]\\s*"
-											+ "(([a-zA-Z_][a-zA-Z0-9_]*)|" // get variable as value
-											+ "'(.|\\\\n|\\\\t|\\\\r)'|" // get char
-											+ "\\d*l|" // get long value
-											+ "\\d*|" // get integer value
-											+ "\\d*\\.\\d*f|" // get float value
-											+ "\\d*\\.\\d*d|" // get double value
-											+ "\\d*\\.\\d)" // get decimal value 
-											+ "(;|,)" // either comma or separator
-											+ "\\s*)");
-									Matcher matcha = declarationConversion.matcher(codeLine);
-									ArrayList<Integer> starts = new ArrayList<Integer>();
-									ArrayList<Integer> ends = new ArrayList<Integer>();
-									// populate all the starts and ends
-									while (matcha.find())
-									{
-										starts.add(matcha.start());
-										ends.add(matcha.end());
-									}
-									matcha.reset(); 
-									if (matcha.find())
-									{
-										String found = matcha.group();
-										// DataTypeChecker
-										if(found.startsWith("int"))
-										{
-											datatype = "int";
-										}
-										else if(found.startsWith("long"))
-										{
-											datatype = "long";
-										}
-										else if(found.startsWith("float"))
-										{
-											datatype = "float";
-										}
-										else if(found.startsWith("double"))
-										{
-											datatype = "double";
-										}
-										else if(found.startsWith("char"))
-										{
-											datatype = "char";
-										}
-										//multiple variable declaration for multiple lines (Capture datatypes first and maybe try to capture the FIRST variable as well)
-										Pattern declarationConversion2 = Pattern.compile("\\b(?!for\\s*\\(|if\\s*\\(|else\\s*\\{|do\\s*\\{|while\\s*\\(|" // loops and conditional variables prefixes
-												+ "switch\\s*\\(|default\\s*:|case\\s+(([a-zA-Z_][a-zA-Z0-9_]*)|'(.|\\\\n|\\\\t|\\\\r)')|" // switch cases prefixes
-												+ "int\\s+|long\\s+|double\\s+|float\\s+|char\\s+|printf\\s*\\(|scanf\\s*\\(|getch\\s*\\(|getchar\\s*\\()" // datatype prefixes and printf/scanf/getch/getchar prefixes
-												+ "(([a-zA-Z_][a-zA-Z0-9_]*)[,;]|" // get the uninitialised variables;
-												+ "([a-zA-Z_][a-zA-Z0-9_]*)" // get the variables with initialised variables
-												+ "(\\s*=\\s*" // equals
-												+ "(([a-zA-Z_][a-zA-Z0-9_]*)|" // get variable as value
-												+ "'(.|\\\\n|\\\\t|\\\\r)'|" // get char
-												+ "\\d*\\.\\d*f|" // get float value
-												+ "\\d*\\.\\d*d|" // get double value
-												+ "\\d*l|" // get long value
-												+ "\\d*\\.\\d*|" // get decimal value
-												+ "\\d*)))");  // get integer value
-										Matcher matcha2 = declarationConversion2.matcher(codeLine);
-										// populate from the first start to the second start
-										for(int i = 0; i < starts.size() - 1; i++)
-										{
-											matcha2.region(starts.get(i), starts.get(i+1));
-										}
-											
-										while(matcha2.find())
-										{
-											String declaration = matcha2.group();
-											// get the vars
-											Pattern equalChecker = Pattern.compile("\\b\\s*=\\s*");
-											Matcher matcha3 = equalChecker.matcher(declaration);
-											if(matcha3.find())
-											{
-												String variable = declaration.substring(0, declaration.indexOf("=")).trim();
-												String value = declaration.substring(declaration.indexOf("=") + 1, declaration.length()).trim();
-												if(value.startsWith("\'"))
-												{
-													datatype = "char";
-													if(value.equals("\'\'"))
-													{
-														value = "\' \'"; // whitespace issue with \u0020
-													}
-												}
-												else if(value.indexOf(".") >= 0)
-												{
-													int entry = 0;
-													if(codeLine.indexOf("float") >= entry)
-													{
-														datatype = "float";
-													}
-													else
-													{
-														datatype = "double";
-													}
-												}
-												System.out.println(datatype + " " + variable + ";");
-												System.out.println(variable + " = " + value + ";");
-											}
-											else
-											{
-												// not found, variable declaration only
-												System.out.println(datatype + " " + declaration);
-											}
-										}
-									}
-									writer.println(codeLine);
+									// check for assignments
+									String assignments = modifiedCodeLine;
+							        do
+							        {
+							            String currentStatement = getCurrentStatement(assignments);
+							            if(currentStatement.contains("+=")||
+							               currentStatement.contains("-=")||
+							               currentStatement.contains("*=")||
+							               currentStatement.contains("-=")||
+							               currentStatement.contains("++")||
+							               currentStatement.contains("--"))
+							            {
+							                String converted = "";
+							                converted = shorthandChanger(currentStatement);
+							                if(currentStatement.length() == assignments.length())
+							                    System.out.print(converted);
+							                else System.out.print(converted + " ");
+							                assignments = nextStatement(assignments);
+							            }
+							            else
+							            {
+							                if(currentStatement.length() == assignments.length())
+							                    System.out.print(currentStatement);
+							                else System.out.print(currentStatement + " ");
+							                assignments = nextStatement(assignments);
+							            }
+							        }
+							        while(!assignments.isEmpty());
+									writer.println();
 								}
 								else
 								{
-									writer.print(codeLine); // EOF!
+									// check for assignments
+									String assignments = modifiedCodeLine;
+							        do
+							        {
+							            String currentStatement = getCurrentStatement(assignments);
+							            if(currentStatement.contains("+=")||
+							               currentStatement.contains("-=")||
+							               currentStatement.contains("*=")||
+							               currentStatement.contains("-=")||
+							               currentStatement.contains("++")||
+							               currentStatement.contains("--"))
+							            {
+							                String converted = "";
+							                converted = shorthandChanger(currentStatement);
+							                if(currentStatement.length() == assignments.length())
+							                    System.out.print(converted);
+							                else System.out.print(converted + " ");
+							                assignments = nextStatement(assignments);
+							            }
+							            else
+							            {
+							                if(currentStatement.length() == assignments.length())
+							                    System.out.print(currentStatement);
+							                else System.out.print(currentStatement + " ");
+							                assignments = nextStatement(assignments);
+							            }
+							        }
+							        while(!assignments.isEmpty());
+							        // EOF!
 								}
 							}
 						}
@@ -429,6 +374,22 @@ public class CASTPreprocessor {
 	public void setSource(File source) {
 		this.source = source;
 	}
+	
+	/**
+	 * Checks the <pre> trimmedCodeLine </pre> for variables. Cases considered are the following:
+	 * 
+	 * 1. A statement that contains a single variable.
+	 * 2. A statement that contains a single variable with corresponding value.
+	 * 3. A statement that contains multiple variables.
+	 * 4. A statement that contains multiple variables with or without corresponding value.
+	 * 5. A statement that contains multiple statements that may and will have the cases above.
+	 *
+	 * @param  trimmedCodeLine	the line to check
+	 * @param  type	the type being used
+	 * @param  types	the data types being stored for the whole C source code.
+	 * @param  vars	the variables being stored for the whole C source code.
+	 * @param  vals	the values being stored for the whole C source code.
+	 */
 	
 	public void getAllVariables(String trimmedCodeLine, String type, ArrayList<String> types, ArrayList<String> vars, ArrayList<String> vals) {
 		// single declarations only
@@ -510,6 +471,12 @@ public class CASTPreprocessor {
       	while (!currentDeclaration.isEmpty());
 	}
 	
+	/**
+	 * Checks the datatype of the first statement.
+	 *
+	 * @param  dec	the declaration for the said statement
+	 */
+	
 	public String typeCheck(String dec)
 	{
 		String res = "";
@@ -526,8 +493,314 @@ public class CASTPreprocessor {
 		return res;
 	}
 	
-	public String commentRemover(String lineContainingComment)
-	{
-		return "not yet implemented";
-	}
+	/**
+	 * Gets the statement that will be examined for the current line.
+	 *
+	 * @param  l	the current line
+	 * @return the first statement of the line
+	 */
+	
+	public String getCurrentStatement(String l)
+    {
+        return l.substring(0, l.indexOf(";") + 1);
+    }
+	
+	/**
+	 * Removes the current statement in the line and proceeds with the next.
+	 * If there are no statements afterwards, then it is considered empty statement.
+	 *
+	 * @param  l	the current line 
+	 * @return the next statements of the line
+	 */
+    
+    public String nextStatement(String l)
+    {
+        return l.substring(l.indexOf(";") + 1).trim();
+    }
+    
+    /**
+	 *
+	 * <ul>
+	 * 	<li> Addition - <pre>+=</pre> </li>
+	 * 	<li> Subtraction - <pre>-=</pre> </li>
+	 * 	<li> Multiplication - <pre>*=</pre> </li>
+	 * 	<li> Division - <pre>/=</pre> </li>
+	 * 	<li> Modulo - <pre>%=</pre> </li>
+	 * </ul>
+	 *
+	 * @param  l	the shorthand statement, where applicable 
+	 * @return the longhand form.
+	 */
+    public String shorthandChanger(String l)
+    {
+    	String res = "";
+        Pattern operationConversion = Pattern.compile("(\\+=|-=|\\*=|\\/=|%=|\\+\\+|--)");
+        Matcher matchaC = operationConversion.matcher(l);
+        while(matchaC.find())
+        {
+        	String var = "";
+            if(l.contains("+="))
+            {
+                var = l.trim().substring(0, l.indexOf("+=") - 1).trim();
+                l = matchaC.replaceFirst("= " + var + " +");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("-="))
+            {
+                var = l.trim().substring(0, l.indexOf("-=") - 1).trim();
+                l = matchaC.replaceFirst("= " + var + " -");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("*="))
+            {
+                var = l.trim().substring(0, l.indexOf("*=") - 1).trim();
+                l = matchaC.replaceFirst("= " + var + " *");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("/="))
+            {
+                var = l.trim().substring(0, l.indexOf("/=") - 1).trim();
+                l = matchaC.replaceFirst("= " + var + " /");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("%="))
+            {
+                var = l.trim().substring(0, l.indexOf("%=") - 1).trim();
+                l = matchaC.replaceFirst("= " + var + " %");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("++"))
+            {
+                var = l.trim().substring(0, l.indexOf("++")).trim();
+                l = matchaC.replaceFirst(" = " + var + " + 1");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("--"))
+            {
+                var = l.trim().substring(0, l.indexOf("--") - 1).trim();
+                l = matchaC.replaceFirst("= " + var + " - 1");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+        }
+        return res;
+    }
+    
+    /**
+	 * Changes the assignment given the current line, if it's in shorthand form, it will be converted to longhand form.
+	 * Example: <pre>i += 5;</pre> will become <pre>i = i + 5;</pre>
+	 * These covers the following shorthand forms:
+	 * 
+	 * <ul>
+	 * 	<li> Addition - <pre>+=</pre> </li>
+	 * 	<li> Subtraction - <pre>-=</pre> </li>
+	 * 	<li> Multiplication - <pre>*=</pre> </li>
+	 * 	<li> Division - <pre>/=</pre> </li>
+	 * 	<li> Modulo - <pre>%=</pre> </li>
+	 * </ul>
+	 *
+	 * @param  l	the shorthand statement, where applicable 
+	 * @return the longhand form.
+	 */
+    
+    public String assignmentChanger(String l)
+    {
+        String res = "";
+        Pattern longhandConversion = Pattern.compile("(\\+=|-=|\\*=|\\/=|%=)");
+        Matcher matchaLHC = longhandConversion.matcher(l);
+        while(matchaLHC.find())
+        {
+        	String var = "";
+            if(l.contains("+="))
+            {
+                var = l.trim().substring(0, l.indexOf("+=") - 1).trim();
+                l = matchaLHC.replaceFirst("= " + var + " +");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("-="))
+            {
+                var = l.trim().substring(0, l.indexOf("-=") - 1).trim();
+                l = matchaLHC.replaceFirst("= " + var + " -");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("*="))
+            {
+                var = l.trim().substring(0, l.indexOf("*=") - 1).trim();
+                l = matchaLHC.replaceFirst("= " + var + " *");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("/="))
+            {
+                var = l.trim().substring(0, l.indexOf("/=") - 1).trim();
+                l = matchaLHC.replaceFirst("= " + var + " /");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("%="))
+            {
+                var = l.trim().substring(0, l.indexOf("%=") - 1).trim();
+                l = matchaLHC.replaceFirst("= " + var + " %");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+        }
+        return res;
+    }
+    
+    /**
+	 * Changes the unary statement given the current line, if it's in shorthand form, it will be converted to longhand form.
+	 * Example: <pre>i++;</pre> will become <pre>i = i + 1;</pre>
+	 * These covers the following shorthand forms:
+	 * 
+	 * <ul>
+	 * 	<li> Positive Increment - <pre>++</pre> </li>
+	 * 	<li> Negative Increment- <pre>--</pre> </li>
+	 * </ul>
+	 *
+	 * @param  l	the unary statement, where applicable 
+	 * @return the longhand form.
+	 */
+    
+    public String unaryChanger(String l)
+    {
+        String res = "";
+        Pattern unaryConversion = Pattern.compile("(\\+\\+|--)");
+        Matcher matchaU = unaryConversion.matcher(l);
+        while(matchaU.find())
+        {
+        	String var = "";
+            if(l.contains("++"))
+            {
+                var = l.trim().substring(0, l.indexOf("++")).trim();
+                l = matchaU.replaceFirst(" = " + var + " + 1");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+            else if(l.contains("--"))
+            {
+                var = l.trim().substring(0, l.indexOf("--") - 1).trim();
+                l = matchaU.replaceFirst("= " + var + " - 1");
+                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+            }
+        }
+        return res;
+    }
+	
+    /**
+	 * Changes the unary statement given the current line, if it's in shorthand form, it will be converted to longhand form.
+	 * Example: <pre>i++;</pre> will become <pre>i = i + 1;</pre>
+	 * These covers the following shorthand forms:
+	 * 
+	 * <ul>
+	 * 	<li> Positive Increment - <pre>++</pre> </li>
+	 * 	<li> Negative Increment- <pre>--</pre> </li>
+	 * </ul>
+	 *
+	 * @param  l	the unary statement, where applicable 
+	 * @return the longhand form.
+	 */
+    
+	public String commentRemover(String lineContainingComment) {
+        String res = lineContainingComment;
+        if (lineContainingComment.trim().startsWith("/*")) 
+        {
+            // MLC = on
+            // Case 1: Multi Line comment ends with closing MLC
+            // Case 1.1: Multiple code statements with multi line comments
+            // Examples:
+            // <code>; /* MLC */ <code>; /* MLC */ ... /* MLC */ <code>;
+            if (lineContainingComment.indexOf("*/") >= 0) 
+            {
+                if (lineContainingComment.indexOf("/*", lineContainingComment.indexOf("/*")) >= 0)
+                {
+                    res = multiCommentRemover(lineContainingComment);
+                }
+                else
+                    res = lineContainingComment.substring(0, lineContainingComment.indexOf("/*")) + lineContainingComment.substring(lineContainingComment.indexOf("*/") + 2);
+            } 
+            else 
+            {
+                res = lineContainingComment.substring(0, lineContainingComment.indexOf("/*"));
+            }
+        } 
+        else if (lineContainingComment.trim().startsWith("*/")) 
+        {
+            String another = lineContainingComment.substring(lineContainingComment.indexOf("*/") + 2);
+            // Case 2.2: Multi Line comment ends with additional single line comments
+            // Case 2.3: Multi Line comment ends with additional multi line comments (after Case 2.2)
+            if (another.indexOf("/*") >= 0) 
+            {
+                res = multiCommentRemover(another);
+            } 
+            else if (another.indexOf("//") >= 0) 
+            {
+                res = another.substring(0, another.indexOf("//") - 1);
+            } 
+            else 
+            {
+                res = another;
+            }
+        } 
+        else if (lineContainingComment.indexOf("/*") >= 0) 
+        {
+            // MLC = on
+            // Case 1: Multi Line comment ends with closing MLC
+            // Case 1.1: Multiple code statements with multi line comments
+            // Examples:
+            // <code>; /* MLC */ <code>; /* MLC */ ... /* MLC */ <code>;
+            if (lineContainingComment.indexOf("*/") >= 0) 
+            {
+                if (lineContainingComment.indexOf("/*", lineContainingComment.indexOf("/*")) >= 0)
+                {
+                    res = multiCommentRemover(lineContainingComment);
+                }
+                else
+                    res = lineContainingComment.substring(0, lineContainingComment.indexOf("/*")) + lineContainingComment.substring(lineContainingComment.indexOf("*/") + 2);
+            } 
+            else 
+            {
+                res = lineContainingComment.substring(0, lineContainingComment.indexOf("/*"));
+            }
+        } 
+        else if (lineContainingComment.indexOf("*/") >= 0) 
+        {
+            String another = lineContainingComment.substring(lineContainingComment.indexOf("*/") + 2);
+            // Case 2.2: Multi Line comment ends with additional single line comments
+            // Case 2.3: Multi Line comment ends with additional multi line comments (after Case 2.2)
+            if (another.indexOf("/*") >= 0) 
+            {
+                res = multiCommentRemover(another);
+            } 
+            else if (another.indexOf("//") >= 0) 
+            {
+                res = another.substring(0, another.indexOf("//") - 1);
+            } 
+            else 
+            {
+                res = another;
+            }
+        } 
+        else if (lineContainingComment.trim().startsWith("//")) 
+        {
+            res = "";
+        } 
+        else if (lineContainingComment.indexOf("//") >= 0) 
+        {
+            // will work with the ff. examples: 
+            // (0, 0) - // example
+            // (0, n - 1) - [code] // example
+            res = lineContainingComment.substring(0, lineContainingComment.indexOf("//") - 1);
+        }
+        return res;
+    }
+    
+    public String multiCommentRemover(String lineContainingComment)
+    {
+        String another = lineContainingComment;
+        do
+        {
+            if(another.contains("/*") && another.contains("*/"))
+                another = another.substring(0, another.indexOf("/*")) + 
+                        another.substring(another.indexOf("*/") + 2);
+            else if(another.lastIndexOf("//") >= 0)
+                another = another.substring(0, another.lastIndexOf("//"));
+        } while (another.contains("/*") || another.contains("*/") || another.contains("//"));
+        return another;
+    }
 }
