@@ -51,7 +51,10 @@ public class CASTPreprocessor {
  							// get #define
  							prevCodeLine = codeLine;
  							codeLine = reader.readLine();
- 							if(codeLine.startsWith("//") || codeLine.startsWith("/*") || codeLine.startsWith("*/") || codeLine.startsWith("#include"))
+ 							if(codeLine.contains("//") || 
+ 								codeLine.contains("/*") || 
+ 								codeLine.contains("*/") || 
+ 								codeLine.startsWith("#include"))
  							{
  								// DO NOTHING
  							}
@@ -138,17 +141,22 @@ public class CASTPreprocessor {
 							{
 								// Case 2: Multi Line comment is really a multi line comment
 								// Case 2.1: Multi Line comment ends with closing MLC, with or without the methods.
-								if(codeLine.indexOf("*/") >= 0)
+								if(codeLine2.indexOf("*/") >= 0)
 								{
 									multiLineComment = !multiLineComment;
 									// Case 2.2: Multi Line comment ends with additional single line comments
 									// Case 2.3: Multi Line comment ends with additional multi line comments (after Case 2.2)
-									if(codeLine.indexOf("//") >= 0)
+									if(codeLine2.lastIndexOf("/*") >= 0)
+				                    {
+				                        if(codeLine2.lastIndexOf("/*") > codeLine2.lastIndexOf("*/"))
+				                        {
+				                            // */ ... /* ...
+				                            multiLineComment = !multiLineComment;
+				                        }
+				                        codeLine2 = commentRemover(codeLine2);
+				                    }
+				                    else if(codeLine.indexOf("//") >= 0)
 										codeLine2 = commentRemover(codeLine2);
-									else if(codeLine.indexOf("/*") >= 0)
-									{
-										codeLine2 = commentRemover(codeLine2);
-									}
 									else
 										codeLine2 = commentRemover(codeLine2);
 								}
@@ -691,6 +699,8 @@ public class CASTPreprocessor {
                         another.substring(another.indexOf("*/") + 2);
             else if(another.lastIndexOf("//") >= 0)
                 another = another.substring(0, another.lastIndexOf("//"));
+            else if(another.lastIndexOf("/*") >= 0)
+                another = another.substring(0, another.lastIndexOf("/*"));
         } while (another.contains("/*") || another.contains("*/") || another.contains("//"));
         return another;
     }
