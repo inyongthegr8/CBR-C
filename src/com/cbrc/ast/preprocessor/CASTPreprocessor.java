@@ -51,7 +51,7 @@ public class CASTPreprocessor {
  							// get #define
  							prevCodeLine = codeLine;
  							codeLine = reader.readLine();
- 							if (codeLine == null) break;
+ 							if (codeLine == null) preprocess = !preprocess;
  							else if(codeLine.contains("//") || 
  								codeLine.contains("/*") || 
  								codeLine.contains("*/") || 
