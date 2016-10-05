@@ -491,16 +491,39 @@ public class CASTPreprocessor {
             }
             else if(l.contains("++"))
             {
-                var = l.trim().substring(0, l.indexOf("++")).trim();
-                l = matchaC.replaceFirst(" = " + var + " + 1");
-                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+                Pattern plus2VarCap = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=(\\+\\+))");
+                Matcher matchaV = plus2VarCap.matcher(l);
+                matchaV.find();
+                if(l.indexOf("=") < 0)
+                {
+                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
+                    l = matchaC.replaceFirst(" = " + var + " + 1");
+                }
+                else
+                {
+                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
+                    l = matchaC.replaceFirst(" + 1");
+                }
+                res = l;
             }
             else if(l.contains("--"))
             {
-                var = l.trim().substring(0, l.indexOf("--") - 1).trim();
-                l = matchaC.replaceFirst("= " + var + " - 1");
-                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+                Pattern minus2VarCap = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=(--))");
+                Matcher matchaV = minus2VarCap.matcher(l);
+                matchaV.find();
+                if(l.indexOf("=") < 0)
+                {
+                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
+                    l = matchaC.replaceFirst(" = " + var + " - 1");
+                }
+                else
+                {
+                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
+                    l = matchaC.replaceFirst(" - 1");
+                }
+                res = l;
             }
+            matchaC = operationConversion.matcher(l);
         }
         return res;
     }
@@ -585,18 +608,39 @@ public class CASTPreprocessor {
         Matcher matchaU = unaryConversion.matcher(l);
         while(matchaU.find())
         {
-        	String var = "";
+            String var = "";
+            Pattern unaryVarCap = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=(\\+\\+)|(--))");
+            Matcher matchaV = unaryVarCap.matcher(l);
+            matchaV.find();
             if(l.contains("++"))
             {
-                var = l.trim().substring(0, l.indexOf("++")).trim();
-                l = matchaU.replaceFirst(" = " + var + " + 1");
-                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+                if(l.indexOf("=") < 0)
+                {
+                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
+                    l = matchaU.replaceFirst(" = " + var + " + 1");
+                }
+                else
+                {
+                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
+                    l = matchaU.replaceFirst(" + 1");
+                }
+                matchaU = unaryConversion.matcher(l);
+                res = l;
             }
             else if(l.contains("--"))
             {
-                var = l.trim().substring(0, l.indexOf("--") - 1).trim();
-                l = matchaU.replaceFirst("= " + var + " - 1");
-                res = res.concat(l.substring(0, l.indexOf(";") + 1));
+                if(l.indexOf("=") < 0)
+                {
+                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
+                    l = matchaU.replaceFirst(" = " + var + " - 1");
+                }
+                else
+                {
+                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
+                    l = matchaU.replaceFirst(" - 1");
+                }
+                matchaU = unaryConversion.matcher(l);
+                res = l;
             }
         }
         return res;
