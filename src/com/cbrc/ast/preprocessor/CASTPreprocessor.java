@@ -110,76 +110,6 @@ public class CASTPreprocessor {
  							}
  						}
  						preprocess = true;
-						// inputStream.getChannel().position(0); // reposition to line 1, column 1.
-						// Preprocessor Directives
-						/* OLD
-						reader.mark(1);
-						while (reader.read() != -1) {
-							reader.reset();
-							reader.mark(8);
-							// #define or #import read
-							char keyword[] = new char[8];
-							String res = "";
-							for(int i = 0; i < keyword.length; i++)
-							{
-								char c = (char) reader.read();
-								keyword[i] = c;
-								res += Character.toString(keyword[i]);
-							}
-							res = res.trim();
-							boolean markInclude = res.equals("#include");
-							boolean markDefine = res.equals("#define");
-							if(markInclude) reader.read(); // omit spacebar
-							while(markInclude)
-							{
-								reader.mark(64); // read <filename.h>
-								Character c = (char) reader.read();
-								if(c == '\n' || c == '\r')
-								{
-									markInclude = !markInclude;
-									reader.read();
-								}
-							}
-							while(markDefine)
-							{
-								reader.mark(64); // read variables
-								String variable = "";
-								Character c = (char) reader.read(); // read first entry
-								while(c != ' ')
-								{
-									variable += Character.toString(c);
-									c = (char) reader.read();
-								}
-								cvars.add(variable);
-								reader.mark(16); // read variables
-								String value = "";
-								c = (char) reader.read(); // read first entry
-								while(c != '\r')
-								{
-									value += Character.toString(c);
-									c = (char) reader.read();
-								}
-								cvals.add(value);
-								reader.mark(1);
-								reader.read(); // omit newline
-								markDefine = false;
-							}
-							
-							// read variables
-
-							// future implementation.
-							// reader.mark(3);
-							//char c1 = (char) reader.read();
-							//char c2 = (char) reader.read();
-							
-							//if ((c1 == '+' && c2 == '+') || (c1 == '-' && c2 == '-')) {
-
-							}
-							
-
-							reader.mark(1);
-						}
-						*/
 						inputStream.getChannel().position(0); // reposition to line 1, column 1.
 						codeLine = "";
 						prevCodeLine = "";
@@ -187,6 +117,57 @@ public class CASTPreprocessor {
  						while(sc.hasNext()){
 							prevCodeLine = codeLine; // get previous code line
 							codeLine = sc.nextLine(); // gets current code line
+							String codeLine2 = codeLine;
+							// remove all comments first
+							if(codeLine2.indexOf("/*") >= 0)
+							{
+								// MLC = on
+								multiLineComment = true;
+								// Case 1: Multi Line comment ends with closing MLC
+								if(codeLine2.indexOf("*/") >= 0)
+								{
+									multiLineComment = !multiLineComment;
+									codeLine2 = commentRemover(codeLine2);
+								}
+								else
+								{
+									codeLine2 = commentRemover(codeLine2);
+								}
+							}
+							else if(multiLineComment)
+							{
+								// Case 2: Multi Line comment is really a multi line comment
+								// Case 2.1: Multi Line comment ends with closing MLC, with or without the methods.
+								if(codeLine.indexOf("*/") >= 0)
+								{
+									multiLineComment = !multiLineComment;
+									// Case 2.2: Multi Line comment ends with additional single line comments
+									// Case 2.3: Multi Line comment ends with additional multi line comments (after Case 2.2)
+									if(codeLine.indexOf("//") >= 0)
+										codeLine2 = commentRemover(codeLine2);
+									else if(codeLine.indexOf("/*") >= 0)
+									{
+										codeLine2 = commentRemover(codeLine2);
+									}
+									else
+										codeLine2 = commentRemover(codeLine2);
+								}
+								else codeLine2 = "";
+							}
+							else if(codeLine2.startsWith("//"))
+							{
+								codeLine2 = commentRemover(codeLine2);
+							}
+							else if(codeLine2.indexOf("//") >= 0)
+							{
+								// will work with the ff. examples: 
+								// (0, 0) - // example
+								// (0, n - 1) - [code] // example
+								codeLine2 = commentRemover(codeLine2);
+							}
+							// already removed.
+							codeLine = codeLine2;
+							// replace constants with the actual variables
 							for(int i = 0; i < cvars.size(); i++)
 							{
 								if(!codeLine.startsWith("#define") && !codeLine.startsWith("#include")) // preprocess directives are out of the question.
@@ -199,79 +180,10 @@ public class CASTPreprocessor {
 									}
 									
 								}
-								/* Old Solution. Commented out, deprecated.
-								if(!codeLine.startsWith("#define"))
-									codeLine = codeLine.replace(cvars.get(i), cvals.get(i)); // replace constant variables with the actual constant values (Find and Replace a la mode)
-								*/
 							}
 							if(codeLine.startsWith("#define"))
 							{
 								writer.print("");
-							}
-							else if(codeLine.startsWith("//"))
-							{
-								writer.print("");
-							}
-							else if(codeLine.indexOf("//") >= 0)
-							{
-								// will work with the ff. examples: 
-								// (0, 0) - // example
-								// (0, n - 1) - [code] // example
-								if(sc.hasNext())
-									writer.println(commentRemover(codeLine));
-								else
-									writer.print(commentRemover(codeLine));
-							}
-							else if(codeLine.indexOf("/*") >= 0)
-							{
-								// MLC = on
-								multiLineComment = true;
-								// Case 1: Multi Line comment ends with closing MLC
-								if(codeLine.indexOf("*/") >= 0)
-								{
-									multiLineComment = !multiLineComment;
-									if(sc.hasNext())
-										writer.println(commentRemover(codeLine));
-									else
-										writer.print(commentRemover(codeLine));
-								}
-								else
-								{
-									if(sc.hasNext())
-										writer.println(commentRemover(codeLine));
-									else
-										writer.print(commentRemover(codeLine));
-								}
-							}
-							else if(multiLineComment)
-							{
-								// Case 2: Multi Line comment is really a multi line comment
-								// Case 2.1: Multi Line comment ends with closing MLC, with or without the methods.
-								if(codeLine.indexOf("*/") >= 0)
-								{
-									multiLineComment = !multiLineComment;
-									if(sc.hasNext())
-									{
-										// Case 2.2: Multi Line comment ends with additional single line comments
-										// Case 2.3: Multi Line comment ends with additional multi line comments (after Case 2.2)
-										if(codeLine.indexOf("//") >= 0)
-											writer.println(commentRemover(codeLine));
-										else if(codeLine.indexOf("/*") >= 0)
-										{
-											writer.println(commentRemover(codeLine));
-											multiLineComment = !multiLineComment;
-										}
-										else
-											writer.println(commentRemover(codeLine));
-									}
-									else
-									{
-										if(codeLine.indexOf("//") >= 0)
-											writer.print(commentRemover(codeLine.substring(0, codeLine.indexOf("//") - 1)));
-										else
-											writer.print(commentRemover(codeLine));
-									}
-								}
 							}
 							else
 							{
@@ -696,92 +608,71 @@ public class CASTPreprocessor {
 	 * @return the longhand form.
 	 */
     
-	public String commentRemover(String lineContainingComment) {
+    public String commentRemover(String lineContainingComment) {
         String res = lineContainingComment;
-        if (lineContainingComment.trim().startsWith("/*")) 
-        {
+        if (lineContainingComment.trim().startsWith("/*")) {
             // MLC = on
             // Case 1: Multi Line comment ends with closing MLC
             // Case 1.1: Multiple code statements with multi line comments
             // Examples:
             // <code>; /* MLC */ <code>; /* MLC */ ... /* MLC */ <code>;
-            if (lineContainingComment.indexOf("*/") >= 0) 
-            {
+            if (lineContainingComment.indexOf("*/") >= 0) {
                 if (lineContainingComment.indexOf("/*", lineContainingComment.indexOf("/*")) >= 0)
                 {
                     res = multiCommentRemover(lineContainingComment);
                 }
                 else
                     res = lineContainingComment.substring(0, lineContainingComment.indexOf("/*")) + lineContainingComment.substring(lineContainingComment.indexOf("*/") + 2);
-            } 
-            else 
-            {
+            } else {
                 res = lineContainingComment.substring(0, lineContainingComment.indexOf("/*"));
             }
-        } 
-        else if (lineContainingComment.trim().startsWith("*/")) 
-        {
+        } else if (lineContainingComment.trim().startsWith("*/")) {
             String another = lineContainingComment.substring(lineContainingComment.indexOf("*/") + 2);
             // Case 2.2: Multi Line comment ends with additional single line comments
             // Case 2.3: Multi Line comment ends with additional multi line comments (after Case 2.2)
-            if (another.indexOf("/*") >= 0) 
-            {
+            if (another.indexOf("/*") >= 0) {
                 res = multiCommentRemover(another);
-            } 
-            else if (another.indexOf("//") >= 0) 
-            {
+            } else if (another.indexOf("//") >= 0) {
                 res = another.substring(0, another.indexOf("//") - 1);
-            } 
-            else 
-            {
+            } else {
                 res = another;
             }
-        } 
-        else if (lineContainingComment.indexOf("/*") >= 0) 
-        {
+        } else if (lineContainingComment.indexOf("/*") >= 0) {
             // MLC = on
             // Case 1: Multi Line comment ends with closing MLC
             // Case 1.1: Multiple code statements with multi line comments
             // Examples:
             // <code>; /* MLC */ <code>; /* MLC */ ... /* MLC */ <code>;
-            if (lineContainingComment.indexOf("*/") >= 0) 
+            if (lineContainingComment.indexOf("*/") < lineContainingComment.indexOf("/*"))
             {
+                // example: */ code /* ...
+                lineContainingComment = lineContainingComment.substring(lineContainingComment.indexOf("*/") + 2);
+                res = multiCommentRemover(lineContainingComment);
+            }
+            else if (lineContainingComment.indexOf("*/") >= 0) {
                 if (lineContainingComment.indexOf("/*", lineContainingComment.indexOf("/*")) >= 0)
                 {
                     res = multiCommentRemover(lineContainingComment);
                 }
                 else
                     res = lineContainingComment.substring(0, lineContainingComment.indexOf("/*")) + lineContainingComment.substring(lineContainingComment.indexOf("*/") + 2);
-            } 
-            else 
-            {
+            } else {
                 res = lineContainingComment.substring(0, lineContainingComment.indexOf("/*"));
             }
-        } 
-        else if (lineContainingComment.indexOf("*/") >= 0) 
-        {
+        } else if (lineContainingComment.indexOf("*/") >= 0) {
             String another = lineContainingComment.substring(lineContainingComment.indexOf("*/") + 2);
             // Case 2.2: Multi Line comment ends with additional single line comments
             // Case 2.3: Multi Line comment ends with additional multi line comments (after Case 2.2)
-            if (another.indexOf("/*") >= 0) 
-            {
+            if (another.indexOf("/*") >= 0) {
                 res = multiCommentRemover(another);
-            } 
-            else if (another.indexOf("//") >= 0) 
-            {
+            } else if (another.indexOf("//") >= 0) {
                 res = another.substring(0, another.indexOf("//") - 1);
-            } 
-            else 
-            {
+            } else {
                 res = another;
             }
-        } 
-        else if (lineContainingComment.trim().startsWith("//")) 
-        {
+        } else if (lineContainingComment.startsWith("//")) {
             res = "";
-        } 
-        else if (lineContainingComment.indexOf("//") >= 0) 
-        {
+        } else if (lineContainingComment.indexOf("//") >= 0) {
             // will work with the ff. examples: 
             // (0, 0) - // example
             // (0, n - 1) - [code] // example
