@@ -51,7 +51,8 @@ public class CASTPreprocessor {
  							// get #define
  							prevCodeLine = codeLine;
  							codeLine = reader.readLine();
- 							if(codeLine.contains("//") || 
+ 							if (codeLine == null) break;
+ 							else if(codeLine.contains("//") || 
  								codeLine.contains("/*") || 
  								codeLine.contains("*/") || 
  								codeLine.startsWith("#include"))
@@ -92,6 +93,11 @@ public class CASTPreprocessor {
  	 										}
  		 									trimmedCodeLine = "";
  		 								}
+ 										else if(trimmedCodeLine.indexOf(";") == -1)
+ 										{
+ 											// not found, do nothing
+ 		 									trimmedCodeLine = "";
+ 										}
  										else
  										{
  											// if type declaration is done, else, proceed to the next statement, since there's a next declaration
@@ -107,12 +113,7 @@ public class CASTPreprocessor {
  									while(!trimmedCodeLine.isEmpty());
  								}
  							}
- 							else if(sc.hasNext())
- 							{
- 								preprocess = !preprocess;
- 							}
  						}
- 						preprocess = true;
 						inputStream.getChannel().position(0); // reposition to line 1, column 1.
 						codeLine = "";
 						prevCodeLine = "";
