@@ -120,61 +120,61 @@ public class CASTPreprocessor {
  						while(sc.hasNext()){
 							prevCodeLine = codeLine; // get previous code line
 							codeLine = sc.nextLine(); // gets current code line
-							String codeLine2 = codeLine;
+							String cCodeLine = codeLine;
 							// remove all comments first
-							if(codeLine2.indexOf("/*") >= 0)
+							if(cCodeLine.indexOf("/*") >= 0)
 							{
 								// MLC = on
 								multiLineComment = true;
 								// Case 1: Multi Line comment ends with closing MLC
-								if(codeLine2.indexOf("*/") >= 0)
+								if(cCodeLine.indexOf("*/") >= 0)
 								{
 									multiLineComment = !multiLineComment;
-									codeLine2 = commentRemover(codeLine2);
+									cCodeLine = commentRemover(cCodeLine);
 								}
 								else
 								{
-									codeLine2 = commentRemover(codeLine2);
+									cCodeLine = commentRemover(cCodeLine);
 								}
 							}
 							else if(multiLineComment)
 							{
 								// Case 2: Multi Line comment is really a multi line comment
 								// Case 2.1: Multi Line comment ends with closing MLC, with or without the methods.
-								if(codeLine2.indexOf("*/") >= 0)
+								if(cCodeLine.indexOf("*/") >= 0)
 								{
 									multiLineComment = !multiLineComment;
 									// Case 2.2: Multi Line comment ends with additional single line comments
 									// Case 2.3: Multi Line comment ends with additional multi line comments (after Case 2.2)
-									if(codeLine2.lastIndexOf("/*") >= 0)
+									if(cCodeLine.lastIndexOf("/*") >= 0)
 				                    {
-				                        if(codeLine2.lastIndexOf("/*") > codeLine2.lastIndexOf("*/"))
+				                        if(cCodeLine.lastIndexOf("/*") > cCodeLine.lastIndexOf("*/"))
 				                        {
 				                            // */ ... /* ...
 				                            multiLineComment = !multiLineComment;
 				                        }
-				                        codeLine2 = commentRemover(codeLine2);
+				                        cCodeLine = commentRemover(cCodeLine);
 				                    }
 				                    else if(codeLine.indexOf("//") >= 0)
-										codeLine2 = commentRemover(codeLine2);
+										cCodeLine = commentRemover(cCodeLine);
 									else
-										codeLine2 = commentRemover(codeLine2);
+										cCodeLine = commentRemover(cCodeLine);
 								}
-								else codeLine2 = "";
+								else cCodeLine = "";
 							}
-							else if(codeLine2.startsWith("//"))
+							else if(cCodeLine.startsWith("//"))
 							{
-								codeLine2 = commentRemover(codeLine2);
+								cCodeLine = commentRemover(cCodeLine);
 							}
-							else if(codeLine2.indexOf("//") >= 0)
+							else if(cCodeLine.indexOf("//") >= 0)
 							{
 								// will work with the ff. examples: 
 								// (0, 0) - // example
 								// (0, n - 1) - [code] // example
-								codeLine2 = commentRemover(codeLine2);
+								cCodeLine = commentRemover(cCodeLine);
 							}
 							// already removed.
-							codeLine = codeLine2;
+							codeLine = cCodeLine;
 							// replace constants with the actual variables
 							for(int i = 0; i < cvars.size(); i++)
 							{
@@ -213,8 +213,8 @@ public class CASTPreprocessor {
 							                String converted = "";
 							                converted = shorthandChanger(currentStatement);
 							                if(currentStatement.length() == assignments.length())
-							                    System.out.print(converted);
-							                else System.out.print(converted + " ");
+							                    writer.print(converted);
+							                else writer.print(converted + " ");
 							                assignments = nextStatement(assignments);
 							            }
 							            else
@@ -703,5 +703,41 @@ public class CASTPreprocessor {
                 another = another.substring(0, another.lastIndexOf("/*"));
         } while (another.contains("/*") || another.contains("*/") || another.contains("//"));
         return another;
+    }
+    
+    public String capturePrintFPrefix(String printfs)
+    {
+        return printfs.substring(0, printfs.indexOf("\""));
+    }
+    
+    public String capturePrintFStrings(String printfs)
+    {
+        String modified = printfs;
+        // replace just in case anomalies
+        modified = modified.replaceAll("\'\"\'", "\'DQ\'");
+        return modified.substring(modified.indexOf("\""), modified.lastIndexOf("\"") + 1).replaceAll("\'DQ\'", "\'\"\'");
+    }
+    
+    public String capturePrintFSuffix(String printfs)
+    {
+        String modified = printfs;
+        // replace just in case anomalies
+        modified = modified.replaceAll("\'\"\'", "\'DQ\'");
+        return modified.substring(modified.lastIndexOf("\"") + 1).replaceAll("\'DQ\'", "\'\"\'");
+    }
+    
+    public String captureScanFPrefix(String scanfs)
+    {
+        return scanfs.substring(0, scanfs.indexOf("\""));
+    }
+    
+    public String captureScanFParams(String scanfs)
+    {
+        return scanfs.substring(scanfs.indexOf("\""), scanfs.lastIndexOf(")"));
+    }
+    
+    public String captureScanFSuffix(String scanfs)
+    {
+        return scanfs.substring(scanfs.lastIndexOf(")"));
     }
 }
