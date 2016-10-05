@@ -198,11 +198,14 @@ public class CASTPreprocessor {
 								String modifiedCodeLine = codeLine;
 								if(sc.hasNext())
 								{
-									// check for assignments
-									String assignments = modifiedCodeLine;
+									String multipleStatements = modifiedCodeLine;
 							        do
 							        {
-							            String currentStatement = getCurrentStatement(assignments);
+							            String currentStatement = getCurrentStatement(multipleStatements);
+							            // check for conditional statements first
+							            // check for loops first
+							            // check for printf/scanf first
+										// check for assignments
 							            if(currentStatement.contains("+=")||
 							               currentStatement.contains("-=")||
 							               currentStatement.contains("*=")||
@@ -212,20 +215,20 @@ public class CASTPreprocessor {
 							            {
 							                String converted = "";
 							                converted = shorthandChanger(currentStatement);
-							                if(currentStatement.length() == assignments.length())
+							                if(currentStatement.length() == multipleStatements.length())
 							                    writer.print(converted);
 							                else writer.print(converted + " ");
-							                assignments = nextStatement(assignments);
+							                multipleStatements = nextStatement(multipleStatements);
 							            }
 							            else
 							            {
-							                if(currentStatement.length() == assignments.length())
+							                if(currentStatement.length() == multipleStatements.length())
 							                    System.out.print(currentStatement);
 							                else System.out.print(currentStatement + " ");
-							                assignments = nextStatement(assignments);
+							                multipleStatements = nextStatement(multipleStatements);
 							            }
 							        }
-							        while(!assignments.isEmpty());
+							        while(!multipleStatements.isEmpty());
 									writer.println();
 								}
 								else
@@ -494,15 +497,20 @@ public class CASTPreprocessor {
                 Pattern plus2VarCap = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=(\\+\\+))");
                 Matcher matchaV = plus2VarCap.matcher(l);
                 matchaV.find();
-                if(l.indexOf("=") < 0)
+                if(l.indexOf("=") >= 0)
                 {
                     var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
-                    l = matchaC.replaceFirst(" = " + var + " + 1");
+                    l = matchaC.replaceFirst(" + 1");
+                }
+                else if(l.contains("printf") || l.contains(","))
+                {
+                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
+                    l = matchaC.replaceFirst(" + 1");
                 }
                 else
                 {
                     var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
-                    l = matchaC.replaceFirst(" + 1");
+                    l = matchaC.replaceFirst(" = " + var + " + 1");
                 }
                 res = l;
             }
@@ -511,15 +519,20 @@ public class CASTPreprocessor {
                 Pattern minus2VarCap = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=(--))");
                 Matcher matchaV = minus2VarCap.matcher(l);
                 matchaV.find();
-                if(l.indexOf("=") < 0)
+                if(l.indexOf("=") >= 0)
                 {
                     var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
-                    l = matchaC.replaceFirst(" = " + var + " - 1");
+                    l = matchaC.replaceFirst(" - 1");
+                }
+                else if(l.contains("printf") || l.contains(","))
+                {
+                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
+                    l = matchaC.replaceFirst(" - 1");
                 }
                 else
                 {
                     var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
-                    l = matchaC.replaceFirst(" - 1");
+                    l = matchaC.replaceFirst(" = " + var + " - 1");
                 }
                 res = l;
             }
