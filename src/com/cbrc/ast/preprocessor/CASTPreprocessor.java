@@ -223,8 +223,8 @@ public class CASTPreprocessor {
 							            else
 							            {
 							                if(currentStatement.length() == multipleStatements.length())
-							                    System.out.print(currentStatement);
-							                else System.out.print(currentStatement + " ");
+							                	writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
 							                multipleStatements = nextStatement(multipleStatements);
 							            }
 							        }
