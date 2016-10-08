@@ -194,7 +194,11 @@ public class CASTPreprocessor {
 									
 								}
 							}
-							if(codeLine.startsWith("#define"))
+							if(codeLine.isEmpty())
+							{
+								writer.print("");
+							}
+							else if(codeLine.startsWith("#define"))
 							{
 								codeLine = "";
 								writer.print("");
