@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -118,6 +119,9 @@ public class CASTPreprocessor {
 						codeLine = "";
 						prevCodeLine = "";
 						boolean multiLineComment = false;
+						boolean insideMethod = false;
+						Stack<String> codez = new Stack<String>();
+						String methodName = "";
  						while(sc.hasNext()){
 							prevCodeLine = codeLine; // get previous code line
 							codeLine = sc.nextLine(); // gets current code line
@@ -204,15 +208,69 @@ public class CASTPreprocessor {
 							else
 							{
 								String modifiedCodeLine = codeLine;
-								if(sc.hasNext())
+								// Check the method IF DECLARED
+								if(methodName.isEmpty() && isAMethodDeclaration(prevCodeLine) && codeLine.contains("{")) // no method dedclaration + datatype method( ... ) \n{ 
 								{
-									String multipleStatements = modifiedCodeLine;
+									methodName = getMethodName(prevCodeLine);
+									codez.push(methodName);
+									insideMethod = true;
+									// Statement Checker = statement(); // after the method declaration
+									String multipleStatements = getRemainingStatements(prevCodeLine + codeLine);
 							        do
 							        {
 							            String currentStatement = getCurrentStatement(multipleStatements);
 							            // check for conditional statements first
+							            if(currentStatement.startsWith("if"))
+							            {
+							            	codez.push(SensitiveKeywords.IF.toString()); writer.print(currentStatement);
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("else if"))
+							            {
+							            	codez.push(SensitiveKeywords.ELSEIF.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("else"))
+							            {
+							            	codez.push(SensitiveKeywords.ELSE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
 							            // check for loops first
+							            else if(currentStatement.startsWith("while"))
+							            {
+							            	codez.push(SensitiveKeywords.WHILE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("do"))
+							            {
+							            	codez.push(SensitiveKeywords.DOWHILE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("for"))
+							            {
+							            	codez.push(SensitiveKeywords.FOR.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
 							            // check for printf/scanf first
+							            else if(capturePrintFPrefix(currentStatement).equals("printf(") || 
+							            		captureScanFPrefix(currentStatement).equals("scanf("))
+							            {
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
 										// check for assignments
 							            if(currentStatement.contains("+=")||
 							               currentStatement.contains("-=")||
@@ -226,15 +284,300 @@ public class CASTPreprocessor {
 							                if(currentStatement.length() == multipleStatements.length())
 							                    writer.print(converted);
 							                else writer.print(converted + " ");
-							                multipleStatements = nextStatement(multipleStatements);
 							            }
 							            else
 							            {
 							                if(currentStatement.length() == multipleStatements.length())
 							                	writer.print(currentStatement);
 							                else writer.print(currentStatement + " ");
-							                multipleStatements = nextStatement(multipleStatements);
 							            }
+						                multipleStatements = nextStatement(multipleStatements);
+							        }
+							        while(!multipleStatements.isEmpty());
+									if(sc.hasNext())
+										writer.println();
+									else
+										writer.print("");
+								}
+								else if(methodName.isEmpty() && isAMethodDeclaration(codeLine) && codeLine.contains("{")) // no method declaration + datatype methodName( ... ) {
+								{
+									methodName = getMethodName(codeLine);
+									codez.push(methodName);
+									insideMethod = true;
+									// Statement Checker = statement(); // after the method declaration
+									String multipleStatements = getRemainingStatements(codeLine);
+							        do
+							        {
+							            String currentStatement = getCurrentStatement(multipleStatements);
+							            // check for conditional statements first
+										if(currentStatement.startsWith("if"))
+							            {
+							            	codez.push(SensitiveKeywords.IF.toString()); writer.print(currentStatement);
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("else if"))
+							            {
+							            	codez.push(SensitiveKeywords.ELSEIF.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("else"))
+							            {
+							            	codez.push(SensitiveKeywords.ELSE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            // check for loops first
+							            else if(currentStatement.startsWith("while"))
+							            {
+							            	codez.push(SensitiveKeywords.WHILE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("do"))
+							            {
+							            	codez.push(SensitiveKeywords.DOWHILE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("for"))
+							            {
+							            	codez.push(SensitiveKeywords.FOR.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            // check for printf/scanf first
+							            else if(capturePrintFPrefix(currentStatement).equals("printf(") || 
+							            		captureScanFPrefix(currentStatement).equals("scanf("))
+							            {
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+										// check for assignments
+							            if(currentStatement.contains("+=")||
+							               currentStatement.contains("-=")||
+							               currentStatement.contains("*=")||
+							               currentStatement.contains("-=")||
+							               currentStatement.contains("++")||
+							               currentStatement.contains("--"))
+							            {
+							                String converted = "";
+							                converted = shorthandChanger(currentStatement);
+							                if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(converted);
+							                else writer.print(converted + " ");
+							            }
+							            else
+							            {
+							                if(currentStatement.length() == multipleStatements.length())
+							                	writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+						                multipleStatements = nextStatement(multipleStatements);
+							        }
+							        while(!multipleStatements.isEmpty());
+									if(sc.hasNext())
+										writer.println();
+									else
+										writer.print("");
+								}
+								else if(codez.peek().equals(methodName) && codeLine.trim().lastIndexOf("}") >= 0) // } // for method itself
+								{
+									insideMethod = false;
+									codez.pop();
+									// maybe may statements pa? before }?
+									String multipleStatements = getRemainingStatements(codeLine);
+							        do
+							        {
+							            String currentStatement = getCurrentStatement(multipleStatements);
+							            // check for conditional statements first
+							            if(currentStatement.startsWith("if"))
+							            {
+							            	codez.push(SensitiveKeywords.IF.toString()); writer.print(currentStatement);
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("else if"))
+							            {
+							            	codez.push(SensitiveKeywords.ELSEIF.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("else"))
+							            {
+							            	codez.push(SensitiveKeywords.ELSE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            // check for loops first
+							            else if(currentStatement.startsWith("while"))
+							            {
+							            	codez.push(SensitiveKeywords.WHILE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("do"))
+							            {
+							            	codez.push(SensitiveKeywords.DOWHILE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("for"))
+							            {
+							            	codez.push(SensitiveKeywords.FOR.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            // check for printf/scanf first
+							            else if(capturePrintFPrefix(currentStatement).equals("printf(") || 
+							            		captureScanFPrefix(currentStatement).equals("scanf("))
+							            {
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+										// check for assignments
+							            if(currentStatement.contains("+=")||
+							               currentStatement.contains("-=")||
+							               currentStatement.contains("*=")||
+							               currentStatement.contains("-=")||
+							               currentStatement.contains("++")||
+							               currentStatement.contains("--"))
+							            {
+							                String converted = "";
+							                converted = shorthandChanger(currentStatement);
+							                if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(converted);
+							                else writer.print(converted + " ");
+							            }
+							            else if(multipleStatements.trim().equals("}"))
+							            {
+							            	codeLine = "}";
+							            }
+							            else
+							            {
+							                if(currentStatement.length() == multipleStatements.length())
+							                	writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+						                multipleStatements = nextStatement(multipleStatements);
+							        }
+							        while(!multipleStatements.isEmpty());
+									if(sc.hasNext())
+										writer.println(codeLine);
+									else
+										writer.print(codeLine);
+								}
+								else if(codeLine.trim().lastIndexOf("}") >= 0 &&
+										(codez.peek().equals(SensitiveKeywords.FOR.toString()) ||
+										codez.peek().equals(SensitiveKeywords.WHILE.toString()) ||
+										codez.peek().equals(SensitiveKeywords.DOWHILE.toString()) ||
+										codez.peek().equals(SensitiveKeywords.IF.toString()) || 
+							            codez.peek().equals(SensitiveKeywords.ELSEIF.toString()) || 
+							            codez.peek().equals(SensitiveKeywords.ELSE.toString()) ||
+							            codez.peek().equals(SensitiveKeywords.SWITCH.toString()))) // } // for if/switch statements and do/while/for loops
+								{
+									codez.pop();
+									if(sc.hasNext())
+										writer.println(codeLine);
+									else
+										writer.print(codeLine);
+								}
+								// END METHOD CHECK
+								else if(sc.hasNext())
+								{
+									String multipleStatements = modifiedCodeLine;
+							        do
+							        {
+							            String currentStatement = getCurrentStatement(multipleStatements);
+
+							            // check for conditional statements first
+							            if(currentStatement.startsWith("if"))
+							            {
+							            	codez.push(SensitiveKeywords.IF.toString()); writer.print(currentStatement);
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("else if"))
+							            {
+							            	codez.push(SensitiveKeywords.ELSEIF.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("else"))
+							            {
+							            	codez.push(SensitiveKeywords.ELSE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            // check for loops first
+							            else if(currentStatement.startsWith("while"))
+							            {
+							            	codez.push(SensitiveKeywords.WHILE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("do"))
+							            {
+							            	codez.push(SensitiveKeywords.DOWHILE.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            else if(currentStatement.startsWith("for"))
+							            {
+							            	codez.push(SensitiveKeywords.FOR.toString());
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+							            // check for printf/scanf first
+							            else if(capturePrintFPrefix(currentStatement).equals("printf(") || 
+							            		captureScanFPrefix(currentStatement).equals("scanf("))
+							            {
+							            	if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+										// check for assignments
+							            if(currentStatement.contains("+=")||
+							               currentStatement.contains("-=")||
+							               currentStatement.contains("*=")||
+							               currentStatement.contains("-=")||
+							               currentStatement.contains("++")||
+							               currentStatement.contains("--"))
+							            {
+							                String converted = "";
+							                converted = shorthandChanger(currentStatement);
+							                if(currentStatement.length() == multipleStatements.length())
+							                    writer.print(converted);
+							                else writer.print(converted + " ");
+							            }
+							            else
+							            {
+							                if(currentStatement.length() == multipleStatements.length())
+							                	writer.print(currentStatement);
+							                else writer.print(currentStatement + " ");
+							            }
+						                multipleStatements = nextStatement(multipleStatements);
 							        }
 							        while(!multipleStatements.isEmpty());
 									writer.println();
@@ -805,4 +1148,140 @@ public class CASTPreprocessor {
     {
         return scanfs.substring(scanfs.lastIndexOf(")"));
     }
+    
+    
+    public String getMethodName(String l)
+    {
+        String trimmed = l.trim();
+        String res = "";
+        int openParen = trimmed.indexOf("(");
+        if((trimmed.startsWith("int ") || trimmed.startsWith("long ") || 
+            trimmed.startsWith("float ") || trimmed.startsWith("double ") || 
+            trimmed.startsWith("char ") || trimmed.startsWith("void ")))
+        { 
+            res = trimmed.substring(trimmed.indexOf(" "), openParen).trim();
+        }
+        else
+        {
+            res = trimmed.substring(0, openParen).trim();
+        }
+        return res;
+    }
+
+    public String getRemainingStatements(String l)
+    {
+        String res = "";
+        if((l.startsWith("int ") || l.startsWith("long ") || 
+            l.startsWith("float ") || l.startsWith("double ") || 
+            l.startsWith("char ") || l.startsWith("void ")))
+        {
+            int openParen = l.indexOf("(");
+            int closeParen = l.indexOf(")");
+            int whitespace = l.indexOf(" "); // length of the return datatype
+            String methodName = l.substring(l.indexOf(" ") + 1, openParen);
+            String parameters = l.substring(openParen, closeParen + 1);
+            String remains = l.substring(whitespace + 1 + methodName.length() + parameters.length()).trim();
+            if(remains.startsWith("{"))
+            {
+                res = remains.substring(remains.indexOf("{") + 1).trim();
+            }
+        }
+        else
+        {
+            int openParen = l.indexOf("(");
+            int closeParen = l.indexOf(")");
+            String methodName = l.substring(0, openParen);
+            String parameters = l.substring(openParen, closeParen + 1);
+            String remains = l.substring(methodName.length() + parameters.length());
+            if(remains.startsWith("{") )
+            {
+                res = remains.substring(remains.indexOf("{") + 1).trim();
+            }
+        }
+        return res;
+    }
+    
+    public boolean hasRemainingStatements(String l)
+    {
+    	boolean res = false;
+        if((l.startsWith("int ") || l.startsWith("long ") || 
+            l.startsWith("float ") || l.startsWith("double ") || 
+            l.startsWith("char ") || l.startsWith("void ")))
+        {
+            int openParen = l.indexOf("(");
+            int closeParen = l.indexOf(")");
+            int whitespace = l.indexOf(" "); // length of the return datatype
+            String methodName = l.substring(l.indexOf(" ") + 1, openParen);
+            String parameters = l.substring(openParen, closeParen + 1);
+            String remains = l.substring(whitespace + 1 + methodName.length() + parameters.length()).trim();
+            if(remains.startsWith("{"))
+            {
+                remains = remains.substring(remains.indexOf("{") + 1).trim();
+                if(remains.isEmpty())
+                    res = false; // datatype methodName(){
+                else
+                    res = true; // datatype methodName(){ statement();
+            }
+            else
+            {
+                res = false; // datatype methodName()
+            }
+        }
+        else
+        {
+            int openParen = l.indexOf("(");
+            int closeParen = l.indexOf(")");
+            String methodName = l.substring(0, openParen);
+            String parameters = l.substring(openParen, closeParen + 1);
+            String remains = l.substring(methodName.length() + parameters.length());
+            if(remains.startsWith("{"))
+            {
+                remains = remains.substring(remains.indexOf("{") + 1).trim();
+                if(remains.isEmpty())
+                    res = false; // methodName(){
+                else
+                    res = true; // methodName(){ statement();
+            }
+            else
+            {
+                res = false; // methodName()
+            }
+        }
+        return res;
+    }
+    
+    public boolean isAMethodDeclaration(String l)
+    {
+        boolean res = false;
+        if((l.startsWith("int ") || l.startsWith("long ") || 
+            l.startsWith("float ") || l.startsWith("double ") || 
+            l.startsWith("char ") || l.startsWith("void ")))
+        {
+            String methodName = l.substring(l.indexOf(" ") + 1);
+            int openParen = methodName.indexOf("(");
+            int closeParen = methodName.indexOf(")");
+            String parameters = methodName.substring(openParen, closeParen + 1);
+            String remains = methodName.substring(parameters.length());
+            res = true; // datatype methodName() and { ...
+        }
+        else
+        {
+            int openParen = l.indexOf("(");
+            int closeParen = l.indexOf(")");
+            String methodName = l.substring(0, openParen);
+            String parameters = l.substring(openParen, closeParen + 1);
+            String remains = methodName.substring(parameters.length());
+            if(remains.startsWith("{") )
+            {
+                remains = remains.trim().substring(remains.indexOf("{"));
+                res = true; // methodName(){ ...
+            }
+            else
+            {
+                res = true; // methodName() (provided method name is already set)
+            }
+        }
+        return res;
+    }
+    
 }
