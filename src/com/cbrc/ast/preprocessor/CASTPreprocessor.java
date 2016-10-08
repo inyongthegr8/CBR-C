@@ -215,7 +215,7 @@ public class CASTPreprocessor {
 							{
 								String modifiedCodeLine = codeLine;
 								// Check the method IF DECLARED
-								if(methodName.isEmpty() && isAMethodDeclaration(prevCodeLine) && codeLine.contains("{")) // no method dedclaration + datatype method( ... ) \n{ 
+								if(methodName.isEmpty() && isAMethodDeclaration(prevCodeLine + codeLine)) // no method dedclaration + datatype method( ... ) \n{ 
 								{
 									methodName = getMethodName(prevCodeLine);
 									codez.push(methodName);
@@ -360,8 +360,8 @@ public class CASTPreprocessor {
 							                else writer.print(currentStatement + " ");
 							            }
 							            // check for printf/scanf first
-							            else if(capturePrintFPrefix(currentStatement).equals("printf(") || 
-							            		captureScanFPrefix(currentStatement).equals("scanf("))
+							            else if(currentStatement.trim().startsWith("printf(") || 
+							            		currentStatement.trim().startsWith("scanf("))
 							            {
 							            	if(currentStatement.length() == multipleStatements.length())
 							                    writer.print(currentStatement);
