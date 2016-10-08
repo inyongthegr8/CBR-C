@@ -1253,7 +1253,8 @@ public class CASTPreprocessor {
     public boolean isAMethodDeclaration(String l)
     {
         boolean res = false;
-        if((l.startsWith("int ") || l.startsWith("long ") || 
+        if(l.isEmpty());
+        else if((l.startsWith("int ") || l.startsWith("long ") || 
             l.startsWith("float ") || l.startsWith("double ") || 
             l.startsWith("char ") || l.startsWith("void ")))
         {
