@@ -305,7 +305,7 @@ public class CASTPreprocessor {
 									else
 										writer.print("");
 								}
-								else if(methodName.isEmpty() && isAMethodDeclaration(codeLine) && codeLine.contains("{")) // no method declaration + datatype methodName( ... ) {
+								else if(methodName.isEmpty() && isAMethodDeclaration(codeLine)) // no method declaration + datatype methodName( ... ) { // where { is optional or not
 								{
 									methodName = getMethodName(codeLine);
 									codez.push(methodName);
