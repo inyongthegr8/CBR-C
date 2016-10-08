@@ -194,6 +194,13 @@ public class CASTPreprocessor {
 							{
 								writer.print("");
 							}
+							else if(codeLine.trim().startsWith("#include"))
+							{
+								if(sc.hasNext())
+									writer.println(codeLine);
+								else
+									writer.print(codeLine);
+							}
 							else
 							{
 								String modifiedCodeLine = codeLine;
