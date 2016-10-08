@@ -196,6 +196,7 @@ public class CASTPreprocessor {
 							}
 							if(codeLine.startsWith("#define"))
 							{
+								codeLine = "";
 								writer.print("");
 							}
 							else if(codeLine.trim().startsWith("#include"))
@@ -204,6 +205,7 @@ public class CASTPreprocessor {
 									writer.println(codeLine);
 								else
 									writer.print(codeLine);
+								codeLine = "";
 							}
 							else
 							{
@@ -1253,7 +1255,10 @@ public class CASTPreprocessor {
     public boolean isAMethodDeclaration(String l)
     {
         boolean res = false;
-        if(l.isEmpty());
+        if(l.isEmpty())
+        {
+        	
+        }
         else if((l.startsWith("int ") || l.startsWith("long ") || 
             l.startsWith("float ") || l.startsWith("double ") || 
             l.startsWith("char ") || l.startsWith("void ")))
