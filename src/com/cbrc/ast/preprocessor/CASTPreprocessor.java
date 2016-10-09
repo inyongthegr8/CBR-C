@@ -404,7 +404,7 @@ public class CASTPreprocessor {
 								}
 								// already inside the method
 								else {
-									String multipleStatements = nextStatement(codeLine);
+									String multipleStatements = codeLine;
 							        do
 							        {
 							            String currentStatement = getCurrentStatement(multipleStatements);
