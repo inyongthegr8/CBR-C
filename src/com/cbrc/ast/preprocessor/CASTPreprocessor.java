@@ -335,8 +335,13 @@ public class CASTPreprocessor {
 							}
 							else
 							{
+								// already inside the method
 								if(codeLine.trim().startsWith("do"))
 								{
+									if(sc.hasNext())
+										writer.println(codeLine);
+									else
+										writer.print(codeLine);
 									if(codeLine.startsWith("do"))
 						            {
 						            	codez.push(SensitiveKeywords.DOWHILE.toString());
@@ -345,6 +350,11 @@ public class CASTPreprocessor {
 								else if((codeLine.trim().startsWith("while") && !codez.peek().equals("do"))||
 										codeLine.trim().startsWith("for"))
 								{
+
+									if(sc.hasNext())
+										writer.println(codeLine);
+									else
+										writer.print(codeLine);
 						            if(codeLine.startsWith("while"))
 						            {
 						            	codez.push(SensitiveKeywords.WHILE.toString());
@@ -360,6 +370,11 @@ public class CASTPreprocessor {
 								   codeLine.trim().startsWith("else") ||
 								   codeLine.trim().startsWith("switch"))
 								{
+
+									if(sc.hasNext())
+										writer.println(codeLine);
+									else
+										writer.print(codeLine);
 						            if(codeLine.startsWith("if"))
 						            {
 						            	codez.push(SensitiveKeywords.IF.toString());
@@ -402,11 +417,11 @@ public class CASTPreprocessor {
 									else
 										writer.print(codeLine);
 								}
-								// already inside the method
-								else {
-									String multipleStatements = codeLine;
-							        do
-							        {
+								String multipleStatements = nextStatement(codeLine); // assume there is another statement
+						        do
+						        {
+						        	if(!multipleStatements.isEmpty())
+						        	{
 							            String currentStatement = getCurrentStatement(multipleStatements);
 							            // check for conditional statements first
 							            if(currentStatement.startsWith("if"))
@@ -488,13 +503,13 @@ public class CASTPreprocessor {
 							                else writer.print(currentStatement + " ");
 							            }
 						                multipleStatements = nextStatement(multipleStatements);
-							        }
-							        while(!multipleStatements.isEmpty());
-									if(sc.hasNext())
-										writer.println();
-									else
-										writer.print("");
-								}
+						        	}
+						        }
+						        while(!multipleStatements.isEmpty());
+								if(sc.hasNext())
+									writer.println();
+								else
+									writer.print("");
 							}
  						}
 						sc.close();
@@ -657,7 +672,7 @@ public class CASTPreprocessor {
 	
 	public String getCurrentStatement(String l)
     {
-        return l.substring(0, l.indexOf(";") + 1);
+        return l.substring(0, l.indexOf(";") + 1).trim();
     }
 	
 	/**
