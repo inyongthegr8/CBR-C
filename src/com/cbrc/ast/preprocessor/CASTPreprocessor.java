@@ -417,7 +417,7 @@ public class CASTPreprocessor {
 									else
 										writer.print(codeLine);
 								}
-								if(codeLine.trim().equals("}") || codeLine.trim().equals("{") || codeLine.trim().length() == 1)
+								if(!codeLine.trim().equals("}") && !codeLine.trim().equals("{") && codeLine.trim().length() == 1)
 								{
 									String multipleStatements = nextStatement(codeLine); // assume there is another statement
 							        do
