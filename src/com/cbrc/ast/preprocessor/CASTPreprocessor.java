@@ -209,7 +209,7 @@ public class CASTPreprocessor {
 								codeLine = "";
 							}
 							// check if a method is already declared.
-							if(methodName.isEmpty())
+							else if(methodName.isEmpty())
 							{
 								String modifiedCodeLine = "";
 								// not yet inside the method
