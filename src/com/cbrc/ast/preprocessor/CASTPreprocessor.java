@@ -1194,6 +1194,10 @@ public class CASTPreprocessor {
             {
                 res = remains.substring(remains.indexOf("{") + 1).trim();
             }
+            else if (remains.startsWith("}"))
+            {
+            	res = remains.substring(remains.indexOf("}") + 1).trim();
+            }
         }
         else
         {
@@ -1205,6 +1209,10 @@ public class CASTPreprocessor {
             if(remains.startsWith("{") )
             {
                 res = remains.substring(remains.indexOf("{") + 1).trim();
+            }
+            else if (remains.startsWith("}"))
+            {
+            	res = remains.substring(remains.indexOf("}") + 1).trim();
             }
         }
         return res;
