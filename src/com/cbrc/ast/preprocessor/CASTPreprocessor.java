@@ -21,7 +21,7 @@ public class CASTPreprocessor {
 		this.source = source;
 	}
 
-	public void preprocess() throws IOException {
+	public void preprocess() throws IOException, PostDeclarationException {
 		String tempFileName = this.source.getPath().substring(0, this.source.getPath().length() - 2) + "-temp.c";
 		// TODO: change ++ and -- to non shorthand form, change +=, -=, /= and
 		// *= to non shorthand form
@@ -120,6 +120,7 @@ public class CASTPreprocessor {
 						prevCodeLine = "";
 						boolean multiLineComment = false;
 						boolean isDefine = false;
+						boolean variableImplFinish = false;
 						Stack<String> codez = new Stack<String>();
 						String methodName = "";
  						while(sc.hasNext()){
@@ -224,10 +225,7 @@ public class CASTPreprocessor {
 									codez.push(methodName);
 									// has remaining statements after {?
 									modifiedCodeLine = prevCodeLine + codeLine;
-									if(sc.hasNext())
-										writer.println(codeLine);
-									else
-										writer.print(codeLine);	
+									writer.print(codeLine);	
 								}
 								// no datatype + datatype method( ... ) {  
 								else if(isAMethodDeclaration(codeLine))
@@ -332,12 +330,33 @@ public class CASTPreprocessor {
 							else
 							{
 								// already inside the method
+								// initialise all variables first
+								// finish implementing variables but datatype happens
+								if(!methodName.isEmpty())
+								{
+									if((typeCheck(codeLine.trim()).equals("int") ||
+									   typeCheck(codeLine.trim()).equals("long") ||
+									   typeCheck(codeLine.trim()).equals("float") ||
+									   typeCheck(codeLine.trim()).equals("double") ||
+									   typeCheck(codeLine.trim()).equals("char")) && variableImplFinish == true)
+									{
+										throw new PostDeclarationException("Post Variable Declaration Done, CBR-C does not support parsing post variable declarations");
+									}
+									else if(!(typeCheck(codeLine.trim()).equals("int") ||
+											   typeCheck(codeLine.trim()).equals("long") ||
+											   typeCheck(codeLine.trim()).equals("float") ||
+											   typeCheck(codeLine.trim()).equals("double") ||
+											   typeCheck(codeLine.trim()).equals("char")) && variableImplFinish == false)
+									{
+										if(codeLine.charAt(0) != '{' && isAMethodDeclaration(prevCodeLine))
+											variableImplFinish = true;
+										else if(codeLine.charAt(0) != '}')
+											variableImplFinish = false;
+									}
+								}
 								if(codeLine.trim().startsWith("do"))
 								{
-									if(sc.hasNext())
-										writer.println(codeLine);
-									else
-										writer.print(codeLine);
+									writer.print(codeLine);
 									if(codeLine.startsWith("do"))
 						            {
 						            	codez.push(SensitiveKeywords.DOWHILE.toString());
@@ -347,10 +366,7 @@ public class CASTPreprocessor {
 										codeLine.trim().startsWith("for"))
 								{
 
-									if(sc.hasNext())
-										writer.println(codeLine);
-									else
-										writer.print(codeLine);
+									writer.print(codeLine);
 						            if(codeLine.startsWith("while"))
 						            {
 						            	codez.push(SensitiveKeywords.WHILE.toString());
@@ -366,11 +382,7 @@ public class CASTPreprocessor {
 								   codeLine.trim().startsWith("else") ||
 								   codeLine.trim().startsWith("switch"))
 								{
-
-									if(sc.hasNext())
-										writer.println(codeLine);
-									else
-										writer.print(codeLine);
+									writer.print(codeLine);
 						            if(codeLine.trim().startsWith("if"))
 						            {
 						            	codez.push(SensitiveKeywords.IF.toString());
@@ -411,60 +423,31 @@ public class CASTPreprocessor {
 						            if(currentStatement.startsWith("if"))
 						            {
 						            	codez.push(SensitiveKeywords.IF.toString());
-						            	//if(currentStatement.length() == multipleStatements.length())
-						                    writer.print(currentStatement);
-						                //else writer.print(currentStatement + " ");
 						            }
 						            else if(currentStatement.startsWith("else if"))
 						            {
 						            	codez.push(SensitiveKeywords.ELSEIF.toString());
-						            	//if(currentStatement.length() == multipleStatements.length())
-						                    writer.print(currentStatement);
-						                //else writer.print(currentStatement + " ");
 						            }
 						            else if(currentStatement.startsWith("else"))
 						            {
 						            	codez.push(SensitiveKeywords.ELSE.toString());
-						            	//if(currentStatement.length() == multipleStatements.length())
-						                    writer.print(currentStatement);
-						                //else writer.print(currentStatement + " ");
 						            }
 						            else if(currentStatement.startsWith("switch"))
 						            {
 						            	codez.push(SensitiveKeywords.ELSE.toString());
-						            	//if(currentStatement.length() == multipleStatements.length())
-						                    writer.print(currentStatement);
-						                //else writer.print(currentStatement + " ");
 						            }
 						            // check for loops first
 						            else if(currentStatement.startsWith("do"))
 						            {
 						            	codez.push(SensitiveKeywords.DOWHILE.toString());
-						            	//if(currentStatement.length() == multipleStatements.length())
-						                    writer.print(currentStatement);
-						                //else writer.print(currentStatement + " ");
 						            }
 						            else if(currentStatement.startsWith("while") && !codez.peek().equals("do"))
 						            {
 						            	codez.push(SensitiveKeywords.WHILE.toString());
-						            	//if(currentStatement.length() == multipleStatements.length())
-						                    writer.print(currentStatement);
-						                //else writer.print(currentStatement + " ");
 						            }
 						            else if(currentStatement.startsWith("for"))
 						            {
 						            	codez.push(SensitiveKeywords.FOR.toString());
-						            	//if(currentStatement.length() == multipleStatements.length())
-						                    writer.print(currentStatement);
-						                //else writer.print(currentStatement + " ");
-						            }
-						            // check for printf/scanf first
-						            else if(currentStatement.startsWith("printf(") || 
-						            		currentStatement.startsWith("scanf("))
-						            {
-						            	//if(currentStatement.length() == multipleStatements.length())
-						                    writer.print(currentStatement);
-						                //else writer.print(currentStatement + " ");
 						            }
 									// check for assignments
 						            if(currentStatement.contains("+=")||
@@ -476,17 +459,13 @@ public class CASTPreprocessor {
 						            {
 						                String converted = "";
 						                converted = shorthandChanger(currentStatement);
-						                //if(currentStatement.length() == multipleStatements.length())
-						                    writer.print(converted);
-						                //else writer.print(converted + " ");
+					                    currentStatement = converted;
 						            }
-						            else
-						            {
-						                //if(currentStatement.length() == multipleStatements.length())
-						                	writer.print(currentStatement);
-						                //else writer.print(currentStatement + " ");
-						            }
-					                //multipleStatements = nextStatement(multipleStatements);
+						            currentStatement = currentStatement.trim();
+						            if(!currentStatement.isEmpty())
+						            	for(int i = 0; i < codez.size(); i++)
+						            		writer.print("\t"); // Proper Tabbing method
+				                	writer.print(currentStatement);
 								}
 								if(!codeLine.trim().equals("}") && !codeLine.trim().equals("{") && codeLine.trim().length() == 1)
 								{
@@ -581,7 +560,8 @@ public class CASTPreprocessor {
 							        while(!multipleStatements.isEmpty());
 								}
 								if(sc.hasNext() && !isDefine)
-									writer.println();
+									if(!codeLine.trim().isEmpty())
+										writer.println();
 								else
 									writer.print("");
 							}
