@@ -119,10 +119,12 @@ public class CASTPreprocessor {
 						codeLine = "";
 						prevCodeLine = "";
 						boolean multiLineComment = false;
-						boolean insideMethod = false;
+						boolean isDefine = false;
 						Stack<String> codez = new Stack<String>();
 						String methodName = "";
  						while(sc.hasNext()){
+ 							// reset all flags
+ 							isDefine = false;
 							prevCodeLine = codeLine; // get previous code line
 							codeLine = sc.nextLine(); // gets current code line
 							String cCodeLine = codeLine;
@@ -199,14 +201,11 @@ public class CASTPreprocessor {
 							{
 								codeLine = "";
 								writer.print("");
+								isDefine = true;
 							}
 							else if(codeLine.trim().startsWith("#include"))
 							{
-								if(sc.hasNext())
-									writer.println(codeLine);
-								else
-									writer.print(codeLine);
-								codeLine = "";
+								writer.print(codeLine);
 							}
 							else if(codeLine.isEmpty())
 							{
@@ -375,48 +374,41 @@ public class CASTPreprocessor {
 										writer.println(codeLine);
 									else
 										writer.print(codeLine);
-						            if(codeLine.startsWith("if"))
+						            if(codeLine.trim().startsWith("if"))
 						            {
 						            	codez.push(SensitiveKeywords.IF.toString());
 						            }
-						            else if(codeLine.startsWith("else if"))
+						            else if(codeLine.trim().startsWith("else if"))
 						            {
 						            	codez.push(SensitiveKeywords.ELSEIF.toString());
 						            }
-						            else if(codeLine.startsWith("else"))
+						            else if(codeLine.trim().startsWith("else"))
 						            {
 						            	codez.push(SensitiveKeywords.ELSE.toString());
 						            }
-						            else if(codeLine.startsWith("switch"))
+						            else if(codeLine.trim().startsWith("switch"))
 						            {
 						            	codez.push(SensitiveKeywords.ELSE.toString());
 						            }
 								}
 								else if(codeLine.contains("{"))
 								{
-									if(sc.hasNext())
-										writer.println(codeLine);
-									else
-										writer.print(codeLine);
+									writer.print(codeLine);
 								}
 								// prioritise every closing braces LAST
 								else if(codeLine.contains("}") && codez.peek().equals(methodName))
 								{
 									methodName = "";
 									codez.pop(); // empty stack na
-									if(sc.hasNext())
-										writer.println(codeLine);
-									else
-										writer.print(codeLine);
+									writer.print(codeLine);
 								}
 								else if(codeLine.contains("}"))
 								{
 									codez.pop(); // remove a block of conditional/loop statement
-									if(sc.hasNext())
-										writer.println(codeLine);
-									else
-										writer.print(codeLine);
+									writer.print(codeLine);
 								}
+								else
+									writer.print(codeLine);
 								if(!codeLine.trim().equals("}") && !codeLine.trim().equals("{") && codeLine.trim().length() == 1)
 								{
 									String multipleStatements = nextStatement(codeLine); // assume there is another statement
@@ -509,7 +501,7 @@ public class CASTPreprocessor {
 							        }
 							        while(!multipleStatements.isEmpty());
 								}
-								if(sc.hasNext())
+								if(sc.hasNext() && !isDefine)
 									writer.println();
 								else
 									writer.print("");
