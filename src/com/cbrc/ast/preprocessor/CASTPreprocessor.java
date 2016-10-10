@@ -1187,4 +1187,97 @@ public class CASTPreprocessor {
         return res;
     }
     
+    public String convertVarDecs(String l)
+    {
+        String res = "";
+        String type = typeCheck(l);
+        String variables = l.substring(type.length(), l.lastIndexOf(";")).trim();
+        if(type.equals("char"))
+        {
+            l.replaceAll("\',\'", "\'comma\'");
+            l.replaceAll("\';\'", "\'sc\'");
+        }
+        ArrayList<String> vars = new ArrayList<String>();
+        ArrayList<String> vals = new ArrayList<String>();
+        if(variables.indexOf(",") >= 0)
+        {
+            do
+            {
+                String declaration = "";
+                if(variables.indexOf(",") >= 0)
+                    declaration = variables.substring(0, variables.indexOf(","));
+                else
+                    declaration = variables;
+                String variable = "";
+                String value = "Not Initialized";
+                if(declaration.contains("="))
+                {
+                    variable = declaration.substring(0, declaration.indexOf("=")).trim();
+                    if(type.equals("char"))
+                    {
+                        declaration = declaration.replaceAll("\'comma\'", "\',\'");
+                        declaration = declaration.replaceAll("\'sc\'", "\';\'");
+                    }
+                    value = declaration.substring(declaration.indexOf("=") + 1).trim();
+                }
+                else
+                {
+                    variable = declaration.substring(0).trim();
+                }
+                vars.add(variable);
+                vals.add(value);
+                if(variables.indexOf(",") >= 0)
+                    variables = variables.substring(variables.indexOf(",") + 1).trim();
+                else
+                    variables = "";
+            }
+            while(!variables.isEmpty());
+            int decSize = vars.size();
+            // start with variables declaration first
+            for(int i = 0; i < decSize; i++)
+            {
+                String declaration = type.concat(" ").concat(vars.get(i)).concat("; ");
+                res = res.concat(declaration);
+            }
+            // then next is yung value declaration
+            for(int i = 0; i < decSize; i++)
+            {
+                if(!vals.get(i).equals("Not Initialized"))
+                {
+                    String declaration = vars.get(i).concat(" = ").concat(vals.get(i)).concat("; ");
+                    res = res.concat(declaration);
+                }
+            }
+        }
+        else
+        {
+            String declaration = variables;
+            String variable = "";
+            String value = "Not Initialized";
+            if(declaration.contains("="))
+            {
+                variable = declaration.substring(0, declaration.indexOf("=")).trim();
+                if(type.equals("char"))
+                {
+                    declaration = declaration.replaceAll("\'comma\'", "\',\'");
+                    declaration = declaration.replaceAll("\'sc\'", "\';\'");
+                }
+                value = declaration.substring(declaration.indexOf("=") + 1, declaration.length()).trim();
+            }
+            else
+            {
+                variable = declaration.substring(0).trim();
+            }
+            if(value.equals("Not Initialized"))
+            {
+                res = type.concat(" ").concat(variable).concat("; ");
+            }
+            else
+            {
+                res = type.concat(" ").concat(variable).concat("; ").concat(variable).concat(" = ").concat(value).concat(";");
+            }
+        }
+        return res;
+    }
+    
 }
