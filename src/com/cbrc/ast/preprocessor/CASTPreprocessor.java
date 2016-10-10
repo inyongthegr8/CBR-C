@@ -327,7 +327,7 @@ public class CASTPreprocessor {
 							        }
 							        while(!multipleStatements.isEmpty());
 								}
-								if(sc.hasNext())
+								if(sc.hasNext() && !isDefine)
 									writer.println();
 								else
 									writer.print("");
