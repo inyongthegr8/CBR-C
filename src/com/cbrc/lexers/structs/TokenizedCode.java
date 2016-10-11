@@ -75,7 +75,10 @@ public class TokenizedCode extends ArrayList<Token>{
 	}
 	
 	public Token lookahead() {
-		return this.get(currentIndex);
+		Token result = null;
+		if(currentIndex < this.size())
+			result = this.get(currentIndex);
+		return result;
 	}
 	
 	public Token lookback() {
