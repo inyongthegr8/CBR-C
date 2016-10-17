@@ -330,7 +330,15 @@ public class CASTPreprocessor {
 							else
 							{
 								// already inside the method
-								// initialise all variables first
+								// initialise all variables first, if there are.
+								if(typeCheck(codeLine.trim()).equals("int") ||
+								   typeCheck(codeLine.trim()).equals("long") ||
+								   typeCheck(codeLine.trim()).equals("float") ||
+								   typeCheck(codeLine.trim()).equals("double") ||
+								   typeCheck(codeLine.trim()).equals("char"))
+								{
+									codeLine = convertVarDecs(codeLine.trim());
+								}
 								// finish implementing variables but datatype happens
 								if(!methodName.isEmpty())
 								{
@@ -1222,25 +1230,39 @@ public class CASTPreprocessor {
             String methodName = l.substring(l.indexOf(" ") + 1);
             int openParen = methodName.indexOf("(");
             int closeParen = methodName.indexOf(")");
-            String parameters = methodName.substring(openParen, closeParen + 1);
-            String remains = methodName.substring(parameters.length());
-            res = true; // datatype methodName() and { ...
+            if(openParen == -1 || closeParen == -1)
+            {
+            	res = false;
+            }
+            else
+            {
+                String parameters = methodName.substring(openParen, closeParen + 1);
+                String remains = methodName.substring(parameters.length());
+                res = true; // datatype methodName() and { ...
+            }
         }
         else if(l.indexOf("(") >= 0 && l.indexOf(")") >= 0)
         {
             int openParen = l.indexOf("(");
             int closeParen = l.indexOf(")");
-            String methodName = l.substring(0, openParen);
-            String parameters = l.substring(openParen, closeParen + 1);
-            String remains = methodName.substring(parameters.length());
-            if(remains.startsWith("{") )
+            if(openParen == -1 || closeParen == -1)
             {
-                remains = remains.trim().substring(remains.indexOf("{"));
-                res = true; // methodName(){ ...
+            	res = false;
             }
             else
             {
-                res = true; // methodName() (provided method name is already set)
+                String methodName = l.substring(0, openParen);
+                String parameters = l.substring(openParen, closeParen + 1);
+                String remains = methodName.substring(parameters.length());
+                if(remains.startsWith("{") )
+                {
+                    remains = remains.trim().substring(remains.indexOf("{"));
+                    res = true; // methodName(){ ...
+                }
+                else
+                {
+                    res = true; // methodName() (provided method name is already set)
+                }
             }
         }
         return res;
