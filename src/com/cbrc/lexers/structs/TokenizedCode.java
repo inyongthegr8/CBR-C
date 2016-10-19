@@ -69,18 +69,24 @@ public class TokenizedCode extends ArrayList<Token>{
 	}
 	
 	public Token consume() {
+		/*
 		Token tokenObject = null;
 		if(currentIndex < this.size())
 			tokenObject = this.get(currentIndex);
+		*/
+		Token tokenObject = this.get(currentIndex);
 		if (this.currentIndex < this.size()) currentIndex++;
 		return tokenObject;
 	}
 	
 	public Token lookahead() {
+		/*
 		Token result = null;
 		if(currentIndex < this.size())
 			result = this.get(currentIndex);
 		return result;
+		*/
+		return this.get(currentIndex);
 	}
 	
 	public Token lookback() {
