@@ -46,83 +46,95 @@ public class CASTPreprocessor {
 						// NEW
 						String codeLine = "";
 						String prevCodeLine;
+						int lineCount = 1;
+						int decLineStart = 0, decLineEnd = 0;
 						boolean preprocess = true;
+						boolean variableImplStart = false;
+						boolean variableImplFinish = false;
+						String methodName = "";
  						while(preprocess)
  						{
  							// get #define
  							prevCodeLine = codeLine;
  							codeLine = reader.readLine();
  							if (codeLine == null) preprocess = !preprocess;
- 							else if(codeLine.contains("//") || 
- 								codeLine.contains("/*") || 
- 								codeLine.contains("*/") || 
- 								codeLine.startsWith("#include"))
+ 							else 
  							{
- 								// DO NOTHING
- 							}
- 							else if(codeLine.startsWith("#define"))
- 							{
- 								String variable = codeLine.substring("#define".length() + 1, codeLine.lastIndexOf(" "));
- 								String value = codeLine.substring(codeLine.lastIndexOf(" ") + 1);
- 								cvars.add(variable);
- 								cvals.add(value);
- 							}
- 							else if(codeLine.trim().startsWith("int ") || 
- 									codeLine.trim().startsWith("long ") || 
- 									codeLine.trim().startsWith("float ") ||
- 									codeLine.trim().startsWith("double ") ||
- 									codeLine.trim().startsWith("char "))
- 							{
- 								String trimmedCodeLine = codeLine.trim();
- 								String type = typeCheck(trimmedCodeLine);
- 								// multiple declarations in one line check
- 								if(trimmedCodeLine.indexOf(";") == trimmedCodeLine.length() - 1)
- 								{
- 									getAllVariables(trimmedCodeLine, type, types, vars, vals);
- 								}
- 								else
- 								{
- 									do
+
+ 	 							if(codeLine.contains("//") || 
+ 	 								codeLine.contains("/*") || 
+ 	 								codeLine.contains("*/") || 
+ 	 								codeLine.startsWith("#include"))
+ 	 							{
+ 	 								// DO NOTHING
+ 	 							}
+ 	 							else if(codeLine.startsWith("#define"))
+ 	 							{
+ 	 								String variable = codeLine.substring("#define".length() + 1, codeLine.lastIndexOf(" "));
+ 	 								String value = codeLine.substring(codeLine.lastIndexOf(" ") + 1);
+ 	 								cvars.add(variable);
+ 	 								cvals.add(value);
+ 	 							}
+ 	 							if(methodName.isEmpty())
+ 	 							{
+ 	 								if(isAMethodDeclaration(prevCodeLine + codeLine) && !prevCodeLine.trim().isEmpty())
  									{
- 										if(trimmedCodeLine.indexOf(";") == trimmedCodeLine.length() - 1)
- 		 								{
- 											// if type declaration is done, else, make it empty, since it's the last declaration
- 											if(!type.isEmpty())
- 	 										{
-	 											// do the single
-	 		 									getAllVariables(trimmedCodeLine, type, types, vars, vals);
- 	 										}
- 		 									trimmedCodeLine = "";
- 		 								}
- 										else if(trimmedCodeLine.indexOf(";") == -1)
- 										{
- 											// not found, do nothing
- 		 									trimmedCodeLine = "";
- 										}
- 										else
- 										{
- 											// if type declaration is done, else, proceed to the next statement, since there's a next declaration
- 											if(!type.isEmpty())
- 	 										{
-	 											// do the multiple
-	 		 									getAllVariables(trimmedCodeLine, type, types, vars, vals);
- 	 										}
- 		 							        trimmedCodeLine = trimmedCodeLine.substring(trimmedCodeLine.indexOf(";") + 1).trim();
- 		 							        type = typeCheck(trimmedCodeLine);
- 										}
+ 										methodName = getMethodName(prevCodeLine);
  									}
- 									while(!trimmedCodeLine.isEmpty());
- 								}
+ 									// no datatype + datatype method( ... ) {  
+ 									else if(isAMethodDeclaration(codeLine))
+ 									{
+ 										methodName = getMethodName(codeLine);
+ 									}
+ 	 							}
+ 	 							else
+ 	 							{
+ 	 								if(variableImplStart == false)
+ 	 								{
+ 	 									if(typeCheck(codeLine.trim()).equals("int") ||
+ 										   typeCheck(codeLine.trim()).equals("long") ||
+ 										   typeCheck(codeLine.trim()).equals("float") ||
+ 										   typeCheck(codeLine.trim()).equals("double") ||
+ 										   typeCheck(codeLine.trim()).equals("char"))
+ 	 									{
+ 		 									decLineStart = lineCount;
+ 		 									// System.out.println("Variable declaration starts at : " + decLineStart);
+ 		 									variableImplStart = true;
+ 	 									}
+ 	 								}
+ 	 								else
+ 	 								{
+ 	 	 								if(!(typeCheck(codeLine.trim()).equals("int") ||
+ 	 									   typeCheck(codeLine.trim()).equals("long") ||
+ 	 									   typeCheck(codeLine.trim()).equals("float") ||
+ 	 									   typeCheck(codeLine.trim()).equals("double") ||
+ 	 									   typeCheck(codeLine.trim()).equals("char")) && variableImplFinish == false)
+ 	 									{
+ 	 										decLineEnd = lineCount - 1;
+ 	 	 									// System.out.println("Variable declaration ends at : " + decLineEnd);
+ 	 										variableImplFinish = true;
+ 	 									}
+ 	 								}
+ 	 							}
+ 	 							lineCount++;
  							}
  						}
 						inputStream.getChannel().position(0); // reposition to line 1, column 1.
+						// reset!
+						variableImplFinish = false;
+						methodName = "";
+						// make persistent changes!
+						decLineStart -= cvars.size();
+						decLineEnd -= cvars.size();
+						// System.out.println("After removing defines... ");
+						// System.out.println("Variable declaration starts at : " + decLineStart);
+						// System.out.println("Variable declaration ends at : " + decLineEnd);
 						codeLine = "";
 						prevCodeLine = "";
 						boolean multiLineComment = false;
 						boolean isDefine = false;
-						boolean variableImplFinish = false;
 						Stack<String> codez = new Stack<String>();
-						String methodName = "";
+						ArrayList<String> sourceCode = new ArrayList<String>();
  						while(sc.hasNext()){
  							// reset all flags
  							isDefine = false;
