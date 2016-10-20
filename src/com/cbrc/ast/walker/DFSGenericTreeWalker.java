@@ -41,7 +41,20 @@ public class DFSGenericTreeWalker extends TreeWalker {
 			if (!traversedNodes.empty()) {
 				//int currentIndex = children.indexOf(testNode);
 				int currentIndex = testNode.getIndex();
-				this.currentNode = children.get(currentIndex + 1);
+				try
+				{
+					this.currentNode = children.get(currentIndex + 1);
+				}
+				catch (Exception e)
+				{
+					if(this.traversedNodes.size() == 2)
+					{
+						this.traversedNodes.pop();
+						this.traversedNodes.pop();
+					}
+					this.currentNode = this.headNode;
+					this.isFinished = true;
+				}
 			} else {
 				this.currentNode = this.headNode;
 				this.isFinished = true;
