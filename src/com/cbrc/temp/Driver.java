@@ -427,6 +427,16 @@ public class Driver {
 		
 	}
 	
+	// GUI VER.
+	public static void addCase(BufferedReader br, CASTGDTBuilder builder, String path, 
+			String filePath, String feedback) throws ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
+		File file = new File(filePath);
+		CASTCodeAnnotator annotator = new CASTCodeAnnotator(file);
+		annotator.annotateCode();
+		
+		builder.addNewFaultyCase(annotator.getHeadNode(), feedback);
+	}
+	
 	//TODO: DO NOT ASK ANYMORE FOR PATH TO CODE, INSTEAD GET LAST SUBMITTED VIA LOG
 	public static void askForHelpAbvr(BufferedReader br,
 			CASTGDTStudentTracker students, CASTGDTBuilder builder, String path)
@@ -454,6 +464,22 @@ public class Driver {
 		System.out.println("Ask for help\n");
 		System.out.println("Input student ID: ");
 		String studentID = getInput(br);
+		
+//		System.out.println("Input path to code: ");
+//		String filePath = getInput(br);
+//		
+//		File file = new File(path + filePath);
+//		CASTCodeAnnotator annotator = new CASTCodeAnnotator(file);
+//		annotator.annotateCode();
+		builder.askForHelp(students.retrieveStudentID(studentID));
+	}
+	
+	// GUI VER.
+	public static void askForHelp(BufferedReader br,
+			CASTGDTStudentTracker students, CASTGDTBuilder builder, String path,
+			String studentID)
+			throws IOException, ClassNotFoundException, InstantiationException,
+			IllegalAccessException, Exception {
 		
 //		System.out.println("Input path to code: ");
 //		String filePath = getInput(br);
@@ -572,6 +598,28 @@ public class Driver {
 		/* process New Code will print the necessary feedback */
 	}
 
+	// GUI VER.
+	public static void submitNewCode(BufferedReader br,
+			CASTGDTStudentTracker students, CASTGDTBuilder builder, String path, ArrayList<File> tci, ArrayList<File> tco, 
+			String studentID, String filePath, String faulty)
+			throws IOException, ClassNotFoundException, InstantiationException,
+			IllegalAccessException, Exception {
+		File file = new File(filePath);
+		
+		SourceCodeConverter scc = new SourceCodeConverter(file, file.getAbsolutePath());
+		scc.activate();
+		
+		//TODO: ArrayList for testcase Inputs and test case outputs
+		TesterAndScorer tas = new TesterAndScorer(scc.getModifiedSource(), tci, tco, file.getAbsolutePath());
+		tas.activate();
+		
+		CASTCodeAnnotator annotator = new CASTCodeAnnotator(file);
+		annotator.annotateCode();
+		builder.processNewCode(annotator.getHeadNode(), faulty.equals("Y")?true:false, students.retrieveStudentID(studentID));
+		
+		/* process New Code will print the necessary feedback */
+	}
+	
 	public static void registerNewStudent(BufferedReader br,
 			CASTGDTStudentTracker students, int goalID) throws IOException, SQLException {
 		System.out.println("Register student\n");
@@ -580,6 +628,15 @@ public class Driver {
 		
 		System.out.println("Input student Name: ");
 		String studentName = getInput(br);
+		
+		int studentKey = DerbyUtils.addNewStudent(studentID, studentName, goalID);
+		students.addStudent(studentKey, studentID, studentName);
+	}
+
+	// GUI VER.
+	public static void registerNewStudent(BufferedReader br,
+			CASTGDTStudentTracker students, int goalID, 
+			String studentID, String studentName) throws IOException, SQLException {
 		
 		int studentKey = DerbyUtils.addNewStudent(studentID, studentName, goalID);
 		students.addStudent(studentKey, studentID, studentName);
@@ -647,6 +704,36 @@ public class Driver {
 	public static void printGDT(CASTGDTBuilder cgdtBuilder, String path) throws Exception {
 		DFSGenericTreeWalker dfsTreeWalker = new DFSGenericTreeWalker(cgdtBuilder.getHeadGDTNode());
 		File file = new File(path + "GDT.txt");
+		FileOutputStream fos = new FileOutputStream(file);
+		try {
+			PrintStream ps = new PrintStream(fos);
+			try {
+				ps.print("GOAL ID: " + cgdtBuilder.getSuperGoal().getDBID());
+				ps.println();
+				
+				System.out.println();
+				
+				while (!dfsTreeWalker.isFinished()) {
+					System.out.println(dfsTreeWalker.toStringCurrentNode());
+					ps.print(dfsTreeWalker.toStringCurrentNode());
+					ps.println();
+					dfsTreeWalker.nextNode();
+				}
+				
+				System.out.println();
+			} finally {
+				ps.close();
+			}
+		} finally {
+			fos.close();
+		}
+		
+	}
+	
+	// GUI VER.
+	public static void printGDT(CASTGDTBuilder cgdtBuilder, String path, String filePath) throws Exception {
+		DFSGenericTreeWalker dfsTreeWalker = new DFSGenericTreeWalker(cgdtBuilder.getHeadGDTNode());
+		File file = new File(filePath);
 		FileOutputStream fos = new FileOutputStream(file);
 		try {
 			PrintStream ps = new PrintStream(fos);
