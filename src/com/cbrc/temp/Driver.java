@@ -652,6 +652,11 @@ public class Driver {
 		return input;
 	}
 
+	// GUI VER.
+	public static String getInput(String str){
+		return str;
+	}
+
 	public static String getMenuInputAbvr(BufferedReader br) throws IOException {
 		boolean valid = false;
 		String input = "";
@@ -758,6 +763,21 @@ public class Driver {
 			fos.close();
 		}
 		
+	}
+	
+	// GUI VER.
+	public static StringBuilder showGDT(CASTGDTBuilder cgdtBuilder) throws Exception {
+		DFSGenericTreeWalker dfsTreeWalker = new DFSGenericTreeWalker(cgdtBuilder.getHeadGDTNode());
+		StringBuilder result = new StringBuilder();
+			result.append("GOAL ID: " + cgdtBuilder.getSuperGoal().getDBID());
+			result.append(System.getProperty("line.separator"));
+			while (!dfsTreeWalker.isFinished()) {
+				System.out.println(dfsTreeWalker.toStringCurrentNode());
+				result.append(dfsTreeWalker.toStringCurrentNode());
+				result.append(System.getProperty("line.separator"));
+				dfsTreeWalker.nextNode();
+			}
+		return result;
 	}
 
 	@SuppressWarnings("unused")
