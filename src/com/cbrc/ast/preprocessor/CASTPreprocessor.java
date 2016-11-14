@@ -364,10 +364,11 @@ public class CASTPreprocessor {
 											   typeCheck(codeLine.trim()).equals("double") ||
 											   typeCheck(codeLine.trim()).equals("char")) && variableImplFinish == false)
 									{
-										if(codeLine.charAt(0) != '{' && isAMethodDeclaration(prevCodeLine))
-											variableImplFinish = true;
-										else if(codeLine.charAt(0) != '}')
-											variableImplFinish = false;
+										if(!codeLine.isEmpty())
+											if(codeLine.charAt(0) != '{' && isAMethodDeclaration(prevCodeLine))
+												variableImplFinish = true;
+											else if(codeLine.charAt(0) != '}')
+												variableImplFinish = false;
 									}
 								}
 								if(codeLine.trim().startsWith("do"))
@@ -775,89 +776,89 @@ public class CASTPreprocessor {
     public String shorthandChanger(String l)
     {
     	String res = "";
-        Pattern operationConversion = Pattern.compile("(\\+=|-=|\\*=|\\/=|%=|\\+\\+|--)");
-        Matcher matchaC = operationConversion.matcher(l);
-        while(matchaC.find())
-        {
-        	String var = "";
-            if(l.contains("+="))
-            {
-                var = l.trim().substring(0, l.indexOf("+=") - 1).trim();
-                l = matchaC.replaceFirst("= " + var + " +");
-                res = res.concat(l.substring(0, l.indexOf(";") + 1));
-            }
-            else if(l.contains("-="))
-            {
-                var = l.trim().substring(0, l.indexOf("-=") - 1).trim();
-                l = matchaC.replaceFirst("= " + var + " -");
-                res = res.concat(l.substring(0, l.indexOf(";") + 1));
-            }
-            else if(l.contains("*="))
-            {
-                var = l.trim().substring(0, l.indexOf("*=") - 1).trim();
-                l = matchaC.replaceFirst("= " + var + " *");
-                res = res.concat(l.substring(0, l.indexOf(";") + 1));
-            }
-            else if(l.contains("/="))
-            {
-                var = l.trim().substring(0, l.indexOf("/=") - 1).trim();
-                l = matchaC.replaceFirst("= " + var + " /");
-                res = res.concat(l.substring(0, l.indexOf(";") + 1));
-            }
-            else if(l.contains("%="))
-            {
-                var = l.trim().substring(0, l.indexOf("%=") - 1).trim();
-                l = matchaC.replaceFirst("= " + var + " %");
-                res = res.concat(l.substring(0, l.indexOf(";") + 1));
-            }
-            else if(l.contains("++"))
-            {
-                Pattern plus2VarCap = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=(\\+\\+))");
-                Matcher matchaV = plus2VarCap.matcher(l);
-                matchaV.find();
-                if(l.indexOf("=") >= 0)
-                {
-                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
-                    l = matchaC.replaceFirst(" + 1");
-                }
-                else if(l.contains("printf") || l.contains(","))
-                {
-                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
-                    l = matchaC.replaceFirst(" + 1");
-                }
-                else
-                {
-                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
-                    l = matchaC.replaceFirst(" = " + var + " + 1");
-                }
-                res = l;
-            }
-            else if(l.contains("--"))
-            {
-                Pattern minus2VarCap = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=(--))");
-                Matcher matchaV = minus2VarCap.matcher(l);
-                matchaV.find();
-                if(l.indexOf("=") >= 0)
-                {
-                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
-                    l = matchaC.replaceFirst(" - 1");
-                }
-                else if(l.contains("printf") || l.contains(","))
-                {
-                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
-                    l = matchaC.replaceFirst(" - 1");
-                }
-                else
-                {
-                    var = l.trim().substring(matchaV.start(), matchaV.end()).trim();
-                    l = matchaC.replaceFirst(" = " + var + " - 1");
-                }
-                res = l;
-            }
-            matchaC = operationConversion.matcher(l);
-        }
-        return res;
-    }
+	    Pattern operationConversion = Pattern.compile("(\\+=|-=|\\*=|\\/=|%=|\\+\\+|--)");
+	    Matcher matchaC = operationConversion.matcher(l);
+	    while(matchaC.find())
+	    {
+	    	String var = "";
+	        if(l.contains("+="))
+	        {
+	            var = l.substring(0, l.indexOf("+=") - 1).trim();
+	            l = matchaC.replaceFirst("= " + var + " +");
+	            res = res.concat(l.substring(0, l.indexOf(";") + 1));
+	        }
+	        else if(l.contains("-="))
+	        {
+	            var = l.substring(0, l.indexOf("-=") - 1).trim();
+	            l = matchaC.replaceFirst("= " + var + " -");
+	            res = res.concat(l.substring(0, l.indexOf(";") + 1));
+	        }
+	        else if(l.contains("*="))
+	        {
+	            var = l.substring(0, l.indexOf("*=") - 1).trim();
+	            l = matchaC.replaceFirst("= " + var + " *");
+	            res = res.concat(l.substring(0, l.indexOf(";") + 1));
+	        }
+	        else if(l.contains("/="))
+	        {
+	            var = l.substring(0, l.indexOf("/=") - 1).trim();
+	            l = matchaC.replaceFirst("= " + var + " /");
+	            res = res.concat(l.substring(0, l.indexOf(";") + 1));
+	        }
+	        else if(l.contains("%="))
+	        {
+	            var = l.substring(0, l.indexOf("%=") - 1).trim();
+	            l = matchaC.replaceFirst("= " + var + " %");
+	            res = res.concat(l.substring(0, l.indexOf(";") + 1));
+	        }
+	        else if(l.contains("++"))
+	        {
+	            Pattern plus2VarCap = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=(\\+\\+))");
+	            Matcher matchaV = plus2VarCap.matcher(l);
+	            boolean found = matchaV.find();
+	            if(l.indexOf("=") >= 0)
+	            {
+	                var = l.substring(matchaV.start(), matchaV.end()).trim();
+	                l = matchaC.replaceFirst(" + 1");
+	            }
+	            else if(l.contains("printf") || l.contains(","))
+	            {
+	                var = l.substring(matchaV.start(), matchaV.end()).trim();
+	                l = matchaC.replaceFirst(" + 1");
+	            }
+	            else
+	            {
+	                var = l.substring(matchaV.start(), matchaV.end()).trim();
+	                l = matchaC.replaceFirst(" = " + var + " + 1");
+	            }
+	            res = l;
+	        }
+	        else if(l.contains("--"))
+	        {
+	            Pattern minnus2VarCap = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=(--))");
+	            Matcher matchaV = minnus2VarCap.matcher(l);
+	            boolean found = matchaV.find();
+	            if(l.indexOf("=") >= 0)
+	            {
+	                var = l.substring(matchaV.start(), matchaV.end()).trim();
+	                l = matchaC.replaceFirst(" - 1");
+	            }
+	            else if(l.contains("printf") || l.contains(","))
+	            {
+	                var = l.substring(matchaV.start(), matchaV.end()).trim();
+	                l = matchaC.replaceFirst(" - 1");
+	            }
+	            else
+	            {
+	                var = l.substring(matchaV.start(), matchaV.end()).trim();
+	                l = matchaC.replaceFirst(" = " + var + " - 1");
+	            }
+	            res = l;
+	        }
+	        matchaC = operationConversion.matcher(l);
+	    }
+	    return res;
+	}
     
     /**
 	 * Changes the assignment given the current line, if it's in shorthand form, it will be converted to longhand form.
