@@ -634,8 +634,7 @@ public class Driver {
 	}
 
 	// GUI VER.
-	public static void registerNewStudent(BufferedReader br,
-			CASTGDTStudentTracker students, int goalID, 
+	public static void registerNewStudent(CASTGDTStudentTracker students, int goalID, 
 			String studentID, String studentName) throws IOException, SQLException {
 		
 		int studentKey = DerbyUtils.addNewStudent(studentID, studentName, goalID);
