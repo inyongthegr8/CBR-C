@@ -428,7 +428,7 @@ public class Driver {
 	}
 	
 	// GUI VER.
-	public static void addCase(BufferedReader br, CASTGDTBuilder builder, String path, 
+	public static void addCase(CASTGDTBuilder builder, String path, 
 			String filePath, String feedback) throws ClassNotFoundException, InstantiationException, IllegalAccessException, Exception {
 		File file = new File(filePath);
 		CASTCodeAnnotator annotator = new CASTCodeAnnotator(file);
@@ -475,8 +475,7 @@ public class Driver {
 	}
 	
 	// GUI VER.
-	public static void askForHelp(BufferedReader br,
-			CASTGDTStudentTracker students, CASTGDTBuilder builder, String path,
+	public static void askForHelp(CASTGDTStudentTracker students, CASTGDTBuilder builder, String path,
 			String studentID)
 			throws IOException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException, Exception {
@@ -599,8 +598,7 @@ public class Driver {
 	}
 
 	// GUI VER.
-	public static void submitNewCode(BufferedReader br,
-			CASTGDTStudentTracker students, CASTGDTBuilder builder, String path, ArrayList<File> tci, ArrayList<File> tco, 
+	public static void submitNewCode(CASTGDTStudentTracker students, CASTGDTBuilder builder, String path, ArrayList<File> tci, ArrayList<File> tco, 
 			String studentID, String filePath, String faulty)
 			throws IOException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException, Exception {
