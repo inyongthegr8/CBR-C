@@ -365,8 +365,20 @@ public class CASTPreprocessor {
 											   typeCheck(codeLine.trim()).equals("char")) && variableImplFinish == false)
 									{
 										if(!codeLine.isEmpty())
-											if(codeLine.charAt(0) != '{' && isAMethodDeclaration(prevCodeLine))
-												variableImplFinish = true;
+											if(codeLine.charAt(0) != '{')
+											{
+												try
+												{
+													if(isAMethodDeclaration(prevCodeLine))
+													{
+														variableImplFinish = true;	
+													}
+												}
+												catch(Exception e)
+												{
+													variableImplFinish = true;
+												}
+											}
 											else if(codeLine.charAt(0) != '}')
 												variableImplFinish = false;
 									}
