@@ -243,6 +243,42 @@ public class CASTGDTBuilder {
 		DerbyUtils.log(this.getSuperGoal().getDBID(), studentID, planID, this.matchedAgainstID, this.finalFeedback, feedbackLevel, (short) (isFaulty==true?1:0), (short) 0);
 	}
 	
+	// GUI VER.
+	public String processNewCodeGUI(TranslationUnitNode transUnitNode, Boolean isFaulty, int studentID) throws Exception {
+		String result = "";
+		PlanGDTNode planNode = this.createNewPlan(transUnitNode);
+		// TODO: This should be checked later via test cases.
+		planNode.setFaulty(isFaulty);
+		
+		int planID = DerbyUtils.insertNewPlanWithID(studentID, (short) (isFaulty==true?1:0), transUnitNode.getSource().getAbsolutePath(), this.getSuperGoal().getDBID());
+		planNode.setDBID(planID);
+		
+		int feedbackLevel = DerbyUtils.getStudentFeedbackLevel(studentID, this.getSuperGoal().getDBID());
+		
+		if (this.debug == true) System.out.println("\nStudent " + studentID + " is now in Level " + feedbackLevel + "\n");
+		
+		if (feedbackLevel == 1) {
+			result = handleLevel1FeeedbackGUI(planNode, studentID);
+		} 
+		else if (feedbackLevel == 2) {
+			result = handleLevel2FeedbackGUI(planNode, studentID);
+		} 
+		else if (feedbackLevel == 3) {
+			result = handleLevel3FeedbackGUI(planNode, studentID);
+		} 
+		else if (feedbackLevel == 4) {
+			result = handleLevel4FeedbackGUI(planNode, studentID);
+		}
+		
+		if (this.debug == true) {
+			int newFeedbackLevel = DerbyUtils.getStudentFeedbackLevel(studentID, this.getSuperGoal().getDBID());
+			System.out.println("\nStudent " + studentID + " is now in Level " + newFeedbackLevel + "\n");
+		}
+		
+		DerbyUtils.log(this.getSuperGoal().getDBID(), studentID, planID, this.matchedAgainstID, this.finalFeedback, feedbackLevel, (short) (isFaulty==true?1:0), (short) 0);
+		return result;
+	}
+	
 
 	public void askForHelpAbvr(int studentID) throws Exception {
 		int feedbackLevel = 3;
@@ -579,6 +615,85 @@ public class CASTGDTBuilder {
 			}
 		}
 	}
+	
+	// GUI VER.
+	private String handleLevel2FeedbackGUI(PlanGDTNode planNode, int studentID) throws Exception {
+		String result = "";
+		PlanGDTNode perfectMatch = CASTGDTBuilderPerfectMatcher.getPerfectMatchPlanIfExists(this.getSuperGoal().getChildNodes(), planNode, this.debug, this.indexer);
+		
+		if (!planNode.isFaulty()) {
+			this.finalFeedback = "Congratulations! Your code is correct!";
+			this.matchedAgainstID = -1;
+			
+			if (this.debug == true) {
+				result = this.finalFeedback;
+			}
+			addPlanNodeToGDT(planNode);
+			
+			handleCodeTrail(studentID);
+			
+		} 
+		else if (perfectMatch != null && !perfectMatch.isFaulty()) {
+			this.finalFeedback = "Congratulations! Your code is correct!";
+			this.matchedAgainstID = perfectMatch.getDBID();
+			
+			if (this.debug == true) {
+				result = this.finalFeedback;
+			}
+			
+			handleCodeTrail(studentID);
+		} 
+		else {
+			double pqGramScore = getPQGramScoreOfLastMatchedPlan(planNode, studentID);
+			if (pqGramScore > MISCONCEPTION_DRIFT_TRESHOLD) {
+				handleLevel1FeeedbackGUI(planNode, studentID);
+			} else {
+				addPlanNodeToGDT(planNode);
+				
+				PlanGDTNode bestMatch = CASTGDTBuilderImperfectMatcher.getImperfectBuggyMatch(this.getSuperGoal().getChildNodes(), planNode, this.indexer);
+				ArrayList<PlanGDTNode> perfectMatches = CASTGDTBuilderPerfectMatcher.getPerfectMatchPlanArray(this.getSuperGoal().getChildNodes(), bestMatch, false, this.indexer);
+				CASTGDTLevel3FeedbackBuilder lvl3 = new CASTGDTLevel3FeedbackBuilder(this.headGDTNode);
+				
+				PlanGDTNode bestNonBuggyMatch = CASTGDTBuilderImperfectMatcher.getImperfectWorkingMatch(this.getSuperGoal().getChildNodes(), planNode, this.indexer);
+				ArrayList<Level3Feedback> feedbacks = lvl3.getFeedbackArray(planNode, perfectMatches, bestNonBuggyMatch);
+				
+				if (feedbacks.isEmpty()) {
+					//PlanGDTNode bestNonBuggyMatch = CASTGDTBuilderImperfectMatcher.getImperfectWorkingMatch(this.getSuperGoal().getChildNodes(), planNode, this.indexer);
+					CASTGDTLevel2FeedbackBuilder lvl2 = new CASTGDTLevel2FeedbackBuilder(this.headGDTNode);
+					
+					this.finalFeedback = lvl2.getFeedbackText(planNode, bestNonBuggyMatch);
+					this.matchedAgainstID = bestNonBuggyMatch.getDBID();
+					
+					result = this.finalFeedback;
+					
+					DerbyUtils.setFeedbackLevel(studentID, this.getSuperGoal().getDBID(), 3);
+				} else {
+					giveLevel3Feedback(studentID, feedbacks, lvl3);
+				}
+				
+	//			CASTGDTLevel3FeedbackBuilder lvl3 = new CASTGDTLevel3FeedbackBuilder(this.headGDTNode);
+	//			PlanGDTNode bestMatch = CASTGDTBuilderImperfectMatcher.getImperfectBuggyMatch(this.getSuperGoal().getChildNodes(), planNode);
+	//			
+	//			
+	//			String level3feedback = lvl3.getFeedbackText(planNode, bestMatch);
+	//			if (level3feedback == null) {
+	//				PlanGDTNode bestNonBuggyMatch = CASTGDTBuilderImperfectMatcher.getImperfectWorkingMatch(this.getSuperGoal().getChildNodes(), planNode);
+	//				CASTGDTLevel2FeedbackBuilder lvl2 = new CASTGDTLevel2FeedbackBuilder(this.headGDTNode);
+	//				
+	//				this.finalFeedback = lvl2.getFeedbackText(planNode, bestNonBuggyMatch);
+	//				this.matchedAgainstID = bestNonBuggyMatch.getDBID();
+	//				
+	//				System.out.println(this.finalFeedback);
+	//				
+	//				DerbyUtils.setFeedbackLevel(studentID, this.getSuperGoal().getDBID(), 3);
+	//			}
+	//			else {
+	//				giveLevel3Feedback(studentID, level3feedback, lvl3);
+	//			}
+			}
+		}
+		return result;
+	}
 
 	private void handleLevel4Feedback(PlanGDTNode planNode, int studentID) throws Exception, SQLException, FileNotFoundException, IOException {
 		PlanGDTNode perfectMatch = CASTGDTBuilderPerfectMatcher.getPerfectMatchPlanIfExists(this.getSuperGoal().getChildNodes(), planNode, this.debug, this.indexer);
@@ -625,6 +740,56 @@ public class CASTGDTBuilder {
 				handleCodeTrail(studentID);
 			}
 		}
+	}
+	
+	// GUI VER.
+	private String handleLevel4FeedbackGUI(PlanGDTNode planNode, int studentID) throws Exception, SQLException, FileNotFoundException, IOException {
+		String result = "";
+		PlanGDTNode perfectMatch = CASTGDTBuilderPerfectMatcher.getPerfectMatchPlanIfExists(this.getSuperGoal().getChildNodes(), planNode, this.debug, this.indexer);
+		
+		if (!planNode.isFaulty()) {
+			this.finalFeedback = "Congratulations! Your code is correct!";
+			this.matchedAgainstID = -1;
+			
+			if (this.debug == true) {
+				result = this.finalFeedback;
+			}
+			addPlanNodeToGDT(planNode);
+			
+			handleCodeTrail(studentID);
+			
+		} 
+		else if (perfectMatch != null && !perfectMatch.isFaulty()) {
+			this.finalFeedback = "Congratulations! Your code is correct!";
+			this.matchedAgainstID = perfectMatch.getDBID();
+			
+			if (this.debug == true) {
+				result = this.finalFeedback;
+			}
+			
+			handleCodeTrail(studentID);
+		} 
+		else {
+			
+			double pqGramScore = getPQGramScoreOfLastMatchedPlan(planNode, studentID);
+			if (pqGramScore > MISCONCEPTION_DRIFT_TRESHOLD) {
+				handleLevel1FeeedbackGUI(planNode, studentID);
+			} else {
+				addPlanNodeToGDT(planNode);
+				
+				PlanGDTNode bestNonBuggyMatch = CASTGDTBuilderImperfectMatcher.getImperfectWorkingMatch(this.getSuperGoal().getChildNodes(), planNode, this.indexer);
+				CASTGDTLevel4FeedbackBuilder lvl4 = new CASTGDTLevel4FeedbackBuilder(this.headGDTNode);
+				
+				this.finalFeedback = lvl4.getFeedbackText(planNode, bestNonBuggyMatch);
+				this.matchedAgainstID = bestNonBuggyMatch.getDBID();
+
+				result = this.finalFeedback;
+				
+				DerbyUtils.setFeedbackLevel(studentID, this.getSuperGoal().getDBID(), 4);
+				handleCodeTrail(studentID);
+			}
+		}
+		return result;
 	}
 
 	private void handleLevel3Feedback(PlanGDTNode planNode, int studentID) throws Exception {
@@ -703,6 +868,87 @@ public class CASTGDTBuilder {
 			}
 
 		}
+	}
+	
+	// GUI VER.
+	private String handleLevel3FeedbackGUI(PlanGDTNode planNode, int studentID) throws Exception {
+		String result = "";
+		PlanGDTNode perfectMatch = CASTGDTBuilderPerfectMatcher.getPerfectMatchPlanIfExists(this.getSuperGoal().getChildNodes(), planNode, this.debug, this.indexer);
+		
+		if (!planNode.isFaulty()) {
+			this.finalFeedback = "Congratulations! Your code is correct!";
+			this.matchedAgainstID = -1;
+			
+			if (this.debug == true) {
+				result = this.finalFeedback;
+			}
+			addPlanNodeToGDT(planNode);
+			
+			handleCodeTrail(studentID);
+			
+		} 
+		else if (perfectMatch != null && !perfectMatch.isFaulty()) {
+			this.finalFeedback = "Congratulations! Your code is correct!";
+			this.matchedAgainstID = perfectMatch.getDBID();
+			
+			if (this.debug == true) {
+				result = this.finalFeedback;
+			}
+			
+			handleCodeTrail(studentID);
+		} 
+		else {
+			
+			double pqGramScore = getPQGramScoreOfLastMatchedPlan(planNode, studentID);
+			if (pqGramScore > MISCONCEPTION_DRIFT_TRESHOLD) {
+				handleLevel1FeeedbackGUI(planNode, studentID);
+			} else {
+				addPlanNodeToGDT(planNode);
+				
+				PlanGDTNode bestMatch = CASTGDTBuilderImperfectMatcher.getImperfectBuggyMatch(this.getSuperGoal().getChildNodes(), planNode, this.indexer);
+				ArrayList<PlanGDTNode> perfectMatches = CASTGDTBuilderPerfectMatcher.getPerfectMatchPlanArray(this.getSuperGoal().getChildNodes(), bestMatch, false, this.indexer);
+				CASTGDTLevel3FeedbackBuilder lvl3 = new CASTGDTLevel3FeedbackBuilder(this.headGDTNode);
+				
+				PlanGDTNode bestNonBuggyMatch = CASTGDTBuilderImperfectMatcher.getImperfectWorkingMatch(this.getSuperGoal().getChildNodes(), planNode, this.indexer);
+				ArrayList<Level3Feedback> feedbacks = lvl3.getFeedbackArray(planNode, perfectMatches, bestNonBuggyMatch);
+				
+				if (feedbacks.isEmpty()) {
+					//PlanGDTNode bestNonBuggyMatch = CASTGDTBuilderImperfectMatcher.getImperfectWorkingMatch(this.getSuperGoal().getChildNodes(), planNode, this.indexer);
+					CASTGDTLevel4FeedbackBuilder lvl4 = new CASTGDTLevel4FeedbackBuilder(this.headGDTNode);
+					
+					this.finalFeedback = lvl4.getFeedbackText(planNode, bestNonBuggyMatch);
+					this.matchedAgainstID = bestNonBuggyMatch.getDBID();
+					
+					result = this.finalFeedback;
+					
+					DerbyUtils.setFeedbackLevel(studentID, this.getSuperGoal().getDBID(), 4);
+					handleCodeTrail(studentID);
+				} else {
+					giveLevel3Feedback(studentID, feedbacks, lvl3);
+				}
+//				
+//				CASTGDTLevel3FeedbackBuilder lvl3 = new CASTGDTLevel3FeedbackBuilder(this.headGDTNode);
+//				PlanGDTNode bestMatch = CASTGDTBuilderImperfectMatcher.getImperfectBuggyMatch(this.getSuperGoal().getChildNodes(), planNode);
+//				String level3feedback = lvl3.getFeedbackText(planNode, bestMatch);
+//				if (level3feedback == null) {
+//					PlanGDTNode bestNonBuggyMatch = CASTGDTBuilderImperfectMatcher.getImperfectWorkingMatch(this.getSuperGoal().getChildNodes(), planNode);
+//					CASTGDTLevel4FeedbackBuilder lvl4 = new CASTGDTLevel4FeedbackBuilder(this.headGDTNode);
+//					
+//					this.finalFeedback = lvl4.getFeedbackText(planNode, bestNonBuggyMatch);
+//					this.matchedAgainstID = bestNonBuggyMatch.getDBID();
+//					
+//					System.out.println(this.finalFeedback);
+//					
+//					DerbyUtils.setFeedbackLevel(studentID, this.getSuperGoal().getDBID(), 4);
+//					handleCodeTrail(studentID);
+//				}
+//				else {
+//					giveLevel3Feedback(studentID, level3feedback, lvl3);
+//				}
+			}
+
+		}
+		return result;
 	}
 
 	private double getPQGramScoreOfLastMatchedPlan(PlanGDTNode planNode,
@@ -800,6 +1046,87 @@ public class CASTGDTBuilder {
 			
 			DerbyUtils.setFeedbackLevel(studentID, this.getSuperGoal().getDBID(), 2);
 		}
+	}
+	
+	// GUI VER.
+	private String handleLevel1FeeedbackGUI(PlanGDTNode planNode, int studentID) throws Exception {
+		String result = "";
+		PlanGDTNode perfectMatch = CASTGDTBuilderPerfectMatcher.getPerfectMatchPlanIfExists(this.getSuperGoal().getChildNodes(), planNode, this.debug, this.indexer);
+		
+		if (!planNode.isFaulty()) {
+			this.finalFeedback = "Congratulations! Your code is correct!";
+			this.matchedAgainstID = -1;
+			
+			if (this.debug == true) {
+				result = this.finalFeedback;
+			}
+			addPlanNodeToGDT(planNode);
+			
+		} else if (perfectMatch != null && !perfectMatch.isFaulty()) {
+			this.finalFeedback = "Congratulations! Your code is correct!";
+			this.matchedAgainstID = perfectMatch.getDBID();
+			
+			if (this.debug == true) {
+				result = this.finalFeedback;
+			}
+			
+			HashMap<Integer, String> map = DerbyUtils.getCodeTrail(studentID, this.getSuperGoal().getDBID());
+			
+			if (!map.isEmpty())
+				handleCodeTrail(studentID);
+		} else if (perfectMatch != null && perfectMatch.isFaulty()) {
+			addPlanNodeToGDT(planNode);
+
+			ArrayList<PlanGDTNode> perfectMatches = CASTGDTBuilderPerfectMatcher.getPerfectMatchPlanArray(this.getSuperGoal().getChildNodes(), planNode, false, this.indexer);
+			CASTGDTLevel3FeedbackBuilder lvl3 = new CASTGDTLevel3FeedbackBuilder(this.headGDTNode);
+			
+			PlanGDTNode bestNonBuggyMatch = CASTGDTBuilderImperfectMatcher.getImperfectWorkingMatch(this.getSuperGoal().getChildNodes(), planNode, this.indexer);
+			ArrayList<Level3Feedback> feedbacks = lvl3.getFeedbackArray(planNode, perfectMatches, bestNonBuggyMatch);
+			
+			if (feedbacks.isEmpty()) {
+				CASTGDTLevel1FeedbackBuilder lvl1 = new CASTGDTLevel1FeedbackBuilder(this.headGDTNode);
+				
+				this.finalFeedback = lvl1.getFeedbackText(planNode, null);
+				this.matchedAgainstID = -1;
+				
+				result = this.finalFeedback;
+				
+				DerbyUtils.setFeedbackLevel(studentID, this.getSuperGoal().getDBID(), 2);
+			} else {
+				giveLevel3Feedback(studentID, feedbacks, lvl3);
+			}
+			
+//			while (i < perfectMatches.size() && level3feedback == null) {
+//				level3feedback = lvl3.getFeedbackText(planNode, perfectMatches.get(i));
+//				i++;
+//			}
+//			
+//			if (level3feedback == null) {
+//				CASTGDTLevel1FeedbackBuilder lvl1 = new CASTGDTLevel1FeedbackBuilder(this.headGDTNode);
+//				
+//				this.finalFeedback = lvl1.getFeedbackText(planNode, null);
+//				this.matchedAgainstID = -1;
+//				
+//				System.out.println(this.finalFeedback);
+//				
+//				DerbyUtils.setFeedbackLevel(studentID, this.getSuperGoal().getDBID(), 2);
+//			}
+//			else {
+//				giveLevel3Feedback(studentID, level3feedback, lvl3);
+//			}
+		} else {
+			addPlanNodeToGDT(planNode);
+			
+			CASTGDTLevel1FeedbackBuilder lvl1 = new CASTGDTLevel1FeedbackBuilder(this.headGDTNode);
+			
+			this.finalFeedback = lvl1.getFeedbackText(planNode, null);
+			this.matchedAgainstID = -1;
+			
+			result = this.finalFeedback;
+			
+			DerbyUtils.setFeedbackLevel(studentID, this.getSuperGoal().getDBID(), 2);
+		}
+		return result;
 	}
 
 	private void handleCodeTrail(int studentID) throws SQLException, FileNotFoundException, IOException {
