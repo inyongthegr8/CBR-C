@@ -598,7 +598,7 @@ public class Driver {
 	}
 
 	// GUI VER.
-	public static void submitNewCode(CASTGDTStudentTracker students, CASTGDTBuilder builder, String path, ArrayList<File> tci, ArrayList<File> tco, 
+	public static String submitNewCode(CASTGDTStudentTracker students, CASTGDTBuilder builder, String path, ArrayList<File> tci, ArrayList<File> tco, 
 			String studentID, String filePath, String faulty)
 			throws IOException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException, Exception {
@@ -613,7 +613,7 @@ public class Driver {
 		
 		CASTCodeAnnotator annotator = new CASTCodeAnnotator(file);
 		annotator.annotateCode();
-		builder.processNewCode(annotator.getHeadNode(), faulty.equals("Y")?true:false, students.retrieveStudentID(studentID));
+		return builder.processNewCodeGUI(annotator.getHeadNode(), faulty.equals("Y")?true:false, students.retrieveStudentID(studentID));
 		
 		/* process New Code will print the necessary feedback */
 	}
